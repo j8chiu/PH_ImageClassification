@@ -1,5 +1,5 @@
-from models.pH.pers_lay import *
-from models.pH.pllay import *
+# from models.pH.pers_lay import *
+# from models.pH.pllay import *
 from models.pointnet.pointnet_utils import PointNetEncoder
 import math
 from functools import partial

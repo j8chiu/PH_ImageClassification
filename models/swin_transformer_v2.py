@@ -1,8 +1,8 @@
 import os
 
 from models.swin_utils import *
-from models.pH.pers_lay import *
-from models.pH.pllay import *
+# from models.pH.pers_lay import *
+# from models.pH.pllay import *
 from models.pointnet.pointnet_utils import PointNetEncoder
 from models.swin_utils import *
 import math
@@ -140,13 +140,20 @@ class SwinTransformer(nn.Module):
                     nn.init.zeros_(m.bias)
 
         # print(self)
-        self.load_state_dict(torch.load(join(os.getenv("HOME"), ".cache/torch/hub/checkpoints/"
-                                        "swin_v2_b-781e5279.pth")))
+        #self.load_state_dict(torch.load(os.path.join(os.getenv("HOME"), ".cache/torch/hub/checkpoints/"
+                                        # "swin_v2_b-781e5279.pth")))
+        
+        checkpoint_path = 'pre_trained weights/swin_v2_b-781e5279.pth'
+        checkpoint = torch.load(checkpoint_path,map_location = torch.device('cpu'))
+        self.load_state_dict(checkpoint)
         self.update()
+       
+
+        
 
     def update(self):
         self.patch_embedding = self.features[0]
-        # print(self.patch_embedding[0].weight)
+        #print(self.patch_embedding[0].weight.shape)
         self.stage_1 = self.features[1]
         self.stage_2 = nn.Sequential(*self.features[2:4])
 
@@ -155,6 +162,7 @@ class SwinTransformer(nn.Module):
 
         print(f"delete features =================================")
         del self.features
+        
 
     def forward(self, x):
         if isinstance(x, (tuple, list)):
@@ -318,8 +326,8 @@ def _swin_transformer(
     progress: bool,
     **kwargs: Any,
 ) -> SwinTransformer:
-    if weights is not None:
-        _ovewrite_named_param(kwargs, "num_classes", len(weights.meta["categories"]))
+    # if weights is not None:
+    #     _ovewrite_named_param(kwargs, "num_classes", len(weights.meta["categories"]))
 
     model = SwinTransformer(
         patch_size=patch_size,
@@ -331,8 +339,9 @@ def _swin_transformer(
         **kwargs,
     )
 
-    if weights is not None:
-        model.load_state_dict(weights.get_state_dict(progress=progress))
+    # if weights is not None:
+    #     print('Loading weights')
+    #     model.load_state_dict(weights.get_state_dict(progress=progress))
 
     return model
 

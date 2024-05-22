@@ -37,7 +37,7 @@ ISIC 2018 Dataset
 It already contains training set and test set:
 Train: 10015 images and 1 ground truth response CSV file (containing 1 header row and 10015 corresponding response rows).
     https://challenge.isic-archive.com/data/#2018
-    
+
 Test: 1512 images.
 
 
@@ -47,5 +47,9 @@ PHG-Net Summary:
 PHG train backbone (Swin-V2) init from image net for each dataset; 
 we want to explore if freezeing the image encoder and adding information from topo encoder 
 can yield comparable result.
+
+Swin-V2:
+Freeze then do linear_prob
+
 
 
