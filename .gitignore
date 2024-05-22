@@ -19,3 +19,5 @@ debug-cli.ypeng4.log
 
 preprocessing
 models/pH
+pre_trained weights/
+data/
