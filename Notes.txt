@@ -33,12 +33,13 @@ Training Dataset:
 CBIS-DDSM (Curated Breast Imaging Subset of DDSM) 
     https://www.cancerimagingarchive.net/collection/cbis-ddsm/
 
-ISIC 2018 Dataset
+ISIC 2018 Dataset (https://drive.google.com/file/d/1lOo26YKisfC1vk22bNRvWjpnamS02bmL/view?usp=drive_link)
 It already contains training set and test set:
 Train: 10015 images and 1 ground truth response CSV file (containing 1 header row and 10015 corresponding response rows).
     https://challenge.isic-archive.com/data/#2018
 
 Test: 1512 images.
+
 
 
 
