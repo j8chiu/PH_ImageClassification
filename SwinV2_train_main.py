@@ -213,20 +213,23 @@ def main(args):
 
         epoch_loss.append(loss.detach().cpu().float().numpy())
         epoch_acc.append(acc1.detach().cpu().float().numpy())
+        # Update record
+        train_loss_record.append(loss.detach().cpu().float().numpy())
+        train_acc_record.append(loss.detach().cpu().float().numpy())
 
-    epoch_loss = np.mean(epoch_loss)
-    epoch_acc = np.mean(epoch_acc)
+        epoch_loss = np.mean(epoch_loss)
+        epoch_acc = np.mean(epoch_acc)
 
-    print(f'* Acc@1 {epoch_acc}, loss {epoch_loss}')
+        print(f'* Acc@1 {epoch_acc}, loss {epoch_loss}')
 
 
-    # Evaluate #########################################################################    
-    loss,acc1 = evaluate(args,val_loader, model, device)
-    eval_loss_record.append(loss)
-    eval_acc_record.append(acc1)
-    print(f"Accuracy of the network on the test images: {acc1}")
-    max_accuracy = max(max_accuracy, acc1)
-    print(f'Max accuracy: {max_accuracy:.2f}%')
+        # Evaluate #########################################################################    
+        loss,acc1 = evaluate(args,val_loader, model, device)
+        eval_loss_record.append(loss)
+        eval_acc_record.append(acc1)
+        print(f"Accuracy of the network on the test images: {acc1}")
+        max_accuracy = max(max_accuracy, acc1)
+        print(f'Max accuracy: {max_accuracy:.2f}%')
 
     
     total_time = time.time() - start_time
