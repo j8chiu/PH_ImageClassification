@@ -36,7 +36,7 @@ class ISICDataset(Dataset):
         self.data = os.listdir(self.data_path)
 
         csvfile = pd.read_csv(csv)
-        raw_data = csvfile.values # 
+        raw_data = csvfile.values  
 
         self.data_names = []
         self.targets = []
@@ -92,7 +92,7 @@ class ISICDataset(Dataset):
         #     cv2.cvtColor(cv2.imread(path), cv2.COLOR_BGR2RGB), path
 
     def __len__(self):
-        return len(self.data)
+        return len(self.data_names)
 
 
 if __name__ == "__main__":
