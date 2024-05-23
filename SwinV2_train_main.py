@@ -211,8 +211,8 @@ def main(args):
 
         optimizer.step()
 
-        epoch_loss.append(loss.cpu().float().numpy())
-        epoch_acc.append(acc1.cpu().float().numpy())
+        epoch_loss.append(loss.detach().cpu().float().numpy())
+        epoch_acc.append(acc1.detach().cpu().float().numpy())
 
     epoch_loss = np.mean(epoch_loss)
     epoch_acc = np.mean(epoch_acc)

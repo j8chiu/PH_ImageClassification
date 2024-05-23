@@ -52,5 +52,5 @@ can yield comparable result.
 Swin-V2:
 Freeze then do linear_prob
 
-
+Experiement Result Link: https://docs.google.com/spreadsheets/d/1UrvooZ4ID3i7AEw94iJYSRYg_aHv4j3iyCpkhRfu8UY/edit?usp=sharing
 
