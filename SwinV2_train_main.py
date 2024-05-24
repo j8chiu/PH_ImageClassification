@@ -141,8 +141,8 @@ def main(args):
                             shuffle=False)
     
     # Load Model
-    model = swin_v2_b(weights="IMAGENET1K_V1", num_classes=1000,).to(device)
-    model.head = nn.Linear(in_features=1024, out_features=num_classes, bias=True).to(device)
+    model = swin_v2_b(weights="IMAGENET1K_V1", num_classes=1000,).bfloat16().to(device)
+    model.head = nn.Linear(in_features=1024, out_features=num_classes, bias=True).bfloat16().to(device)
 
     # Freeze model but head
     for _, p in model.named_parameters():
