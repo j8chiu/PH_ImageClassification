@@ -287,3 +287,4 @@ if __name__ == "__main__":
 
 
 # python -m SwinV2_train_main --batch_size 4 --device cpu
+# python -m SwinV2_train_main --batch_size 32 --device cuda

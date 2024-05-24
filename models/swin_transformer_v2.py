@@ -143,7 +143,7 @@ class SwinTransformer(nn.Module):
         #self.load_state_dict(torch.load(os.path.join(os.getenv("HOME"), ".cache/torch/hub/checkpoints/"
                                         # "swin_v2_b-781e5279.pth")))
         
-        checkpoint_path = 'pre_trained weights/swin_v2_b-781e5279.pth'
+        checkpoint_path = 'pre_trained_weights/swin_v2_b-781e5279.pth'
         checkpoint = torch.load(checkpoint_path,map_location = torch.device('cpu'))
         self.load_state_dict(checkpoint)
         self.update()
