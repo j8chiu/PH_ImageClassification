@@ -1,7 +1,7 @@
 import torch.nn as nn
 import torch.utils.data
 import torch.nn.functional as F
-from src.pointnet.pointnet_utils import PointNetEncoder, feature_transform_reguliarzer
+from pointnet_utils import PointNetEncoder, feature_transform_reguliarzer
 
 
 class PointNet(nn.Module):
