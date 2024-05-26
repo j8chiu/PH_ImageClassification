@@ -9,10 +9,11 @@ This repo is still messy. I will make it more readable and provide more detailed
 
 clear conda environment. To create and build env:
 
+```
 conda create --name ph_cls numpy pandas
 conda activate ph_cls
 pip install -r requirements.txt
-
+```
 
 ## 1. Data
 download [ISIC](https://challenge.isic-archive.com/), [Prostate](https://osf.io/k96qw/), [CBIS-DSM](https://wiki.cancerimagingarchive.net/pages/viewpage.action?pageId=22516629) dataset and put them into the directory /home/data/raw_data
