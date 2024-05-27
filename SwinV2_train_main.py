@@ -45,7 +45,7 @@ def evaluate(args,data_loader, model, device):
         # output is a list, each element in a list is a tensor contains class probability.
         loss = 0
         acc1 = 0
-        target = target.float().to(device)
+        target = target.to(device)
 
         criterion = torch.nn.CrossEntropyLoss()
         loss += criterion(pred, target)
@@ -196,7 +196,7 @@ def main(args):
             acc1 = 0
 
             criterion = torch.nn.CrossEntropyLoss()
-            target = target.float().to(device)
+            target = target.to(device)
             loss += criterion(pred, target)
             class_label = torch.argmax(target, dim=1)
             acc1 += accuracy(pred, class_label, topk=(1,))[0]
