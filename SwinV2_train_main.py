@@ -39,13 +39,13 @@ def evaluate(args,data_loader, model, device):
         # Input:
             # imge: N x 3 x W x H 
             # target: N x num_classes
-        img = img.to(device)
+        img = img
         pred,_ = model(img) #N x num_classes
     
         # output is a list, each element in a list is a tensor contains class probability.
         loss = 0
         acc1 = 0
-        target = target.to(device)
+        target = target
 
         criterion = torch.nn.CrossEntropyLoss()
         loss += criterion(pred, target)
@@ -128,12 +128,14 @@ def main(args):
 
     train_set = datasets[args.dataset_name](
         data_dir=data_path,
-        transform=train_transform, is_train=True
+        transform=train_transform, is_train=True,
+        device=device
     )
     # from torchvision.models.swin_transformer.S
     val_set = datasets[args.dataset_name](
         data_dir=data_path,
-        transform=val_transform, is_train=False
+        transform=val_transform, is_train=False,
+        device=device
     )
 
     train_loader = DataLoader(train_set, batch_size=args.batch_size,
@@ -190,7 +192,7 @@ def main(args):
             # Input:
                 # imge: N x 3 x W x H 
                 # target: N x num_classes
-            img = img.to(device)
+            img = img
             pred,_ = model(img) #N x num_classes
         
             # output is a list, each element in a list is a tensor contains class probability.
@@ -198,7 +200,7 @@ def main(args):
             acc1 = 0
 
             criterion = torch.nn.CrossEntropyLoss()
-            target = target.to(device)
+            target = target
             loss += criterion(pred, target)
             class_label = torch.argmax(target, dim=1)
             acc1 += accuracy(pred, class_label, topk=(1,))[0]

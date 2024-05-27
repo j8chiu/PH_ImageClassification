@@ -13,11 +13,13 @@ from torchvision import transforms
 import torch
 
 class ISICDataset(Dataset):
-    def __init__(self, data_dir='data/raw_data/ISIC2018', transform=None, is_train=True):
+    def __init__(self, data_dir='data/raw_data/ISIC2018', transform=None,
+                  is_train=True,device='cuda'):
         """SKin Lesion"""
         self.data_dir = data_dir
         self.transform = transform
         self.is_train = is_train
+        self.device = device
 
         # self.pd_dir = join(self.img_path, "persistent_diagram_1_old")
         # self.pl_dir = join(self.img_path, "persistent_landscape_old")
@@ -87,7 +89,7 @@ class ISICDataset(Dataset):
             img = self.transform(img)
         #img = img.bfloat16()
         
-        return img, target, #pd, np.vstack(pl)
+        return img.to(self.device), target.to(self.device), #pd, np.vstack(pl)
 
         # return img, target, pd, np.vstack(pl), \
         #     cv2.cvtColor(cv2.imread(path), cv2.COLOR_BGR2RGB), path
