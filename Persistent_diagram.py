@@ -8,9 +8,9 @@ import bz2
 import concurrent.futures
 
 # Paths
-image_dir = '/Users/chiuchiu/Downloads/ISIC2018/test'
-label_path = '/Users/chiuchiu/Downloads/ISIC2018/label_test.csv'
-output_dir = '/Users/chiuchiu/Downloads/ISIC2018/test_ph'
+image_dir = 'D:\\UCSD\\2024 spring\\214\\project\\PH_ImageClassification\\data\\ISIC\\test'
+label_path = 'D:\\UCSD\\2024 spring\\214\\project\\PH_ImageClassification\\data\\ISIC\\label_test.csv'
+output_dir = 'D:\\UCSD\\2024 spring\\214\\project\\PH_ImageClassification\\data\\ISIC\\PDnew'
 
 # Ensure output directory exists
 if not os.path.exists(output_dir):
