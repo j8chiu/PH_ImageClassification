@@ -85,8 +85,8 @@ class ISICDataset(Dataset):
 
         if self.transform is not None:
             img = self.transform(img)
-        img = img.bfloat16()
-        target = target.bfloat16()
+        #img = img.bfloat16()
+        target = target
         
         return img, target, #pd, np.vstack(pl)
 

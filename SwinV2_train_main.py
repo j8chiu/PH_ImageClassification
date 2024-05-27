@@ -143,8 +143,8 @@ def main(args):
     
     # Load Model
     #model = swin_v2_b(weights="IMAGENET1K_V1", num_classes=1000,).bfloat16().to(device)
-    model = ViT('B_16_imagenet1k', pretrained=True,image_size=224).to(torch.bfloat16).to(device)
-    model.fc = nn.Linear(in_features=768, out_features=num_classes, bias=True).bfloat16().to(device)
+    model = ViT('B_16_imagenet1k', pretrained=True,image_size=224).to(device)
+    model.fc = nn.Linear(in_features=768, out_features=num_classes, bias=True).to(device)
 
     # Freeze model but head
     for _, p in model.named_parameters():
