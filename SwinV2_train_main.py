@@ -126,6 +126,8 @@ def main(args):
         "ISIC": ISICDataset
     }
 
+    data_loading_start_time = time.time()
+
     train_set = datasets[args.dataset_name](
         data_dir=data_path,
         transform=train_transform, is_train=True,
@@ -142,7 +144,11 @@ def main(args):
                               shuffle=True,)
     val_loader = DataLoader(val_set, batch_size=args.batch_size,
                             shuffle=False)
-    
+    data_loading_end_time = time.time()
+    data_loading_time = data_loading_end_time - data_loading_start_time
+    print(f"Data loading time: {datetime.timedelta(seconds=int(data_loading_time))}")
+
+    # Load Model
     # Load Model
     model = swin_v2_b(weights="IMAGENET1K_V1", num_classes=1000,).to(device)
     model.head = nn.Linear(in_features=1024, out_features=num_classes, bias=True).to(device)
@@ -193,8 +199,13 @@ def main(args):
                 # imge: N x 3 x W x H 
                 # target: N x num_classes
             img = img
+
+            model_inference_start = time.time()
             pred,_ = model(img) #N x num_classes
-        
+            model_inference_end = time.time()
+            model_loading_time = model_inference_end - model_inference_start
+            print(f"Model inferencing time: {datetime.timedelta(seconds=int(model_loading_time))}")
+
             # output is a list, each element in a list is a tensor contains class probability.
             loss = 0
             acc1 = 0
@@ -292,5 +303,5 @@ if __name__ == "__main__":
     main(args)
 
 
-# python -m SwinV2_train_main --batch_size 4 --device cpu
+# python -m SwinV2_train_main --batch_size 64 --device cuda --lr 1e-2
 # python -m SwinV2_train_main --batch_size 32 --device cuda

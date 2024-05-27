@@ -21,3 +21,4 @@ preprocessing
 models/pH
 pre_trained_weights/
 data/
+results/
