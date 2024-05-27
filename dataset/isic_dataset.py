@@ -43,7 +43,7 @@ class ISICDataset(Dataset):
         for data_list in raw_data:
             image_name = data_list[0]+'.jpg'
             self.data_names .append(os.path.join(self.data_path,image_name))
-            label = data_list[1:] # one_hot label
+            label = torch.tensor(np.array(data_list[1:],dtype=np.float32)) # one_hot label
             self.targets.append(label)
 
         # self.target_img_dict = {}
@@ -62,7 +62,7 @@ class ISICDataset(Dataset):
                 """
         path = self.data_names[i]
         #case = os.path.basename(path).split(".")[0]
-        target = torch.tensor(self.targets[i].astype(np.int64)) # one-hot
+        target = self.targets[i] # one-hot
 
         img = io.imread(path)
         # img = pil_loader(path)
@@ -86,7 +86,6 @@ class ISICDataset(Dataset):
         if self.transform is not None:
             img = self.transform(img)
         #img = img.bfloat16()
-        target = target
         
         return img, target, #pd, np.vstack(pl)
 

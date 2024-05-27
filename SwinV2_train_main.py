@@ -40,7 +40,7 @@ def evaluate(args,data_loader, model, device):
             # imge: N x 3 x W x H 
             # target: N x num_classes
         img = img.to(device)
-        pred = model(img) #N x num_classes
+        pred,_ = model(img) #N x num_classes
     
         # output is a list, each element in a list is a tensor contains class probability.
         loss = 0
@@ -142,14 +142,16 @@ def main(args):
                             shuffle=False)
     
     # Load Model
-    #model = swin_v2_b(weights="IMAGENET1K_V1", num_classes=1000,).bfloat16().to(device)
-    model = ViT('B_16_imagenet1k', pretrained=True,image_size=224).to(device)
-    model.fc = nn.Linear(in_features=768, out_features=num_classes, bias=True).to(device)
+    model = swin_v2_b(weights="IMAGENET1K_V1", num_classes=1000,).to(device)
+    model.head = nn.Linear(in_features=1024, out_features=num_classes, bias=True).to(device)
+
+    # model = ViT('B_16_imagenet1k', pretrained=True,image_size=224).to(device)
+    # model.fc = nn.Linear(in_features=768, out_features=num_classes, bias=True).to(device)
 
     # Freeze model but head
     for _, p in model.named_parameters():
         p.requires_grad = False
-    for _, p in model.fc.named_parameters():
+    for _, p in model.head.named_parameters():
         p.requires_grad = True
 
     model.to(device)
@@ -189,7 +191,7 @@ def main(args):
                 # imge: N x 3 x W x H 
                 # target: N x num_classes
             img = img.to(device)
-            pred = model(img) #N x num_classes
+            pred,_ = model(img) #N x num_classes
         
             # output is a list, each element in a list is a tensor contains class probability.
             loss = 0
