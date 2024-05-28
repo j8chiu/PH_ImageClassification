@@ -3,7 +3,8 @@ import os.path
 #from dataset.pd_utils import *
 import numpy as np
 #from batchgenerators.utilities.file_and_folder_operations import *
-from skimage import io
+# from skimage import io
+from PIL import Image
 import pandas as pd
 from torch.utils.data import Dataset
 from torch.utils.data.dataloader import DataLoader
@@ -69,7 +70,8 @@ class ISICDataset(Dataset):
         #case = os.path.basename(path).split(".")[0]
         target = self.targets[i] # one-hot
 
-        img = io.imread(path)
+        # img = io.imread(path)
+        image = Image.open(path)
         # img = pil_loader(path)
 
         pd = []
