@@ -141,9 +141,9 @@ def main(args):
     )
 
     train_loader = DataLoader(train_set, batch_size=args.batch_size,
-                              shuffle=True,)
+                              shuffle=True,num_workers=12)
     val_loader = DataLoader(val_set, batch_size=args.batch_size,
-                            shuffle=False)
+                            shuffle=False,num_workers=12)
 
 
     # Load Model
