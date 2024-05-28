@@ -5,6 +5,7 @@ import numpy as np
 #from batchgenerators.utilities.file_and_folder_operations import *
 from skimage import io
 from PIL import Image
+from torchvision.io import read_image
 import pandas as pd
 from torch.utils.data import Dataset
 from torch.utils.data.dataloader import DataLoader
@@ -70,8 +71,8 @@ class ISICDataset(Dataset):
         #case = os.path.basename(path).split(".")[0]
         target = self.targets[i] # one-hot
 
-        img = io.imread(path).to(self.device)
-
+        #img = io.imread(path)
+        img = read_image(path)
         #img = Image.open(path)
        
 
