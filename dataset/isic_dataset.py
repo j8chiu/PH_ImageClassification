@@ -72,6 +72,11 @@ class ISICDataset(Dataset):
 
         # img = io.imread(path)
         img = Image.open(path)
+
+        data_loading_end_time = time.time()
+        data_loading_time = data_loading_end_time - data_loading_start_time
+        print(f"Data loading time: {datetime.timedelta(seconds=int(data_loading_time))}")
+        
         # img = pil_loader(path)
 
         pd = []
@@ -94,9 +99,7 @@ class ISICDataset(Dataset):
             img = self.transform(img)
         #img = img.bfloat16()
         
-        data_loading_end_time = time.time()
-        data_loading_time = data_loading_end_time - data_loading_start_time
-        print(f"Data loading time: {datetime.timedelta(seconds=int(data_loading_time))}")
+        
 
         return img.to(self.device), target.to(self.device), #pd, np.vstack(pl)
 
