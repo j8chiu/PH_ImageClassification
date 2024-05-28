@@ -39,13 +39,13 @@ def evaluate(args,data_loader, model, device):
         # Input:
             # imge: N x 3 x W x H 
             # target: N x num_classes
-        img = img
+        img = img.to(device)
         pred,_ = model(img) #N x num_classes
     
         # output is a list, each element in a list is a tensor contains class probability.
         loss = 0
         acc1 = 0
-        target = target
+        target = target.to(device)
 
         criterion = torch.nn.CrossEntropyLoss()
         loss += criterion(pred, target)
@@ -197,7 +197,7 @@ def main(args):
             # Input:
                 # imge: N x 3 x W x H 
                 # target: N x num_classes
-            img = img
+            img = img.to(device)
 
             model_inference_start = time.time()
             pred,_ = model(img) #N x num_classes
@@ -210,7 +210,7 @@ def main(args):
             acc1 = 0
 
             criterion = torch.nn.CrossEntropyLoss()
-            target = target
+            target = target.to(device)
             loss += criterion(pred, target)
             class_label = torch.argmax(target, dim=1)
             acc1 += accuracy(pred, class_label, topk=(1,))[0]

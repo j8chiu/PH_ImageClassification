@@ -101,7 +101,7 @@ class ISICDataset(Dataset):
         data_loading_time = data_loading_end_time - data_loading_start_time
         print(f"Data loading time: {datetime.timedelta(seconds=int(data_loading_time))}")
 
-        return img.to(self.device), target.to(self.device), #pd, np.vstack(pl)
+        return img, target, #pd, np.vstack(pl)
 
         # return img, target, pd, np.vstack(pl), \
         #     cv2.cvtColor(cv2.imread(path), cv2.COLOR_BGR2RGB), path
