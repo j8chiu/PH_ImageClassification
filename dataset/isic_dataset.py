@@ -71,7 +71,7 @@ class ISICDataset(Dataset):
         target = self.targets[i] # one-hot
 
         # img = io.imread(path)
-        image = Image.open(path)
+        img = Image.open(path)
         # img = pil_loader(path)
 
         pd = []
