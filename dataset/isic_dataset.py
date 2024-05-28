@@ -11,6 +11,8 @@ from einops import repeat
 import cv2
 from torchvision import transforms
 import torch
+import time
+import datetime
 
 class ISICDataset(Dataset):
     def __init__(self, data_dir='data/raw_data/ISIC2018', transform=None,
@@ -62,6 +64,7 @@ class ISICDataset(Dataset):
                     tuple: (sample, target) where target is class_index of the
                            target class.
                 """
+        data_loading_start_time = time.time()
         path = self.data_names[i]
         #case = os.path.basename(path).split(".")[0]
         target = self.targets[i] # one-hot
@@ -89,6 +92,10 @@ class ISICDataset(Dataset):
             img = self.transform(img)
         #img = img.bfloat16()
         
+        data_loading_end_time = time.time()
+        data_loading_time = data_loading_end_time - data_loading_start_time
+        print(f"Data loading time: {datetime.timedelta(seconds=int(data_loading_time))}")
+
         return img.to(self.device), target.to(self.device), #pd, np.vstack(pl)
 
         # return img, target, pd, np.vstack(pl), \

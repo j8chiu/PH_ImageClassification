@@ -126,7 +126,7 @@ def main(args):
         "ISIC": ISICDataset
     }
 
-    data_loading_start_time = time.time()
+   
 
     train_set = datasets[args.dataset_name](
         data_dir=data_path,
@@ -144,9 +144,7 @@ def main(args):
                               shuffle=True,)
     val_loader = DataLoader(val_set, batch_size=args.batch_size,
                             shuffle=False)
-    data_loading_end_time = time.time()
-    data_loading_time = data_loading_end_time - data_loading_start_time
-    print(f"Data loading time: {datetime.timedelta(seconds=int(data_loading_time))}")
+
 
     # Load Model
     # Load Model
@@ -194,6 +192,7 @@ def main(args):
         epoch_loss = [] 
         epoch_acc = []
 
+        
         for img, target in tqdm(train_loader):
             # Input:
                 # imge: N x 3 x W x H 
