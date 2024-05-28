@@ -198,12 +198,7 @@ def main(args):
                 # imge: N x 3 x W x H 
                 # target: N x num_classes
             img = img.to(device)
-
-            model_inference_start = time.time()
             pred,_ = model(img) #N x num_classes
-            model_inference_end = time.time()
-            model_loading_time = model_inference_end - model_inference_start
-            print(f"Model inferencing time: {datetime.timedelta(seconds=int(model_loading_time))}")
 
             # output is a list, each element in a list is a tensor contains class probability.
             loss = 0

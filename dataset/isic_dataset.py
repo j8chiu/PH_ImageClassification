@@ -65,7 +65,7 @@ class ISICDataset(Dataset):
                     tuple: (sample, target) where target is class_index of the
                            target class.
                 """
-        data_loading_start_time = time.time()
+        # data_loading_start_time = time.time()
         path = self.data_names[i]
         #case = os.path.basename(path).split(".")[0]
         target = self.targets[i] # one-hot
@@ -97,9 +97,9 @@ class ISICDataset(Dataset):
             img = self.transform(img)
         #img = img.bfloat16()
         
-        data_loading_end_time = time.time()
-        data_loading_time = data_loading_end_time - data_loading_start_time
-        print(f"Data loading time: {datetime.timedelta(seconds=int(data_loading_time))}")
+        # data_loading_end_time = time.time()
+        # data_loading_time = data_loading_end_time - data_loading_start_time
+        # print(f"Data loading time: {datetime.timedelta(seconds=int(data_loading_time))}")
 
         return img, target, #pd, np.vstack(pl)
 
