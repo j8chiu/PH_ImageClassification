@@ -2,7 +2,7 @@ import time
 from models.swin_utils import *
 from models import model
 from torch.utils.data.dataloader import DataLoader
-from dataset.isic_dataset import ISICDataset
+from dataset.isicloader import ISICDataset
 # from models.swin_transformer import swin_b, swin_l, swin_t, swin_s
 # from torchvision.models.swin_transformer import swin_b, swin_v2_b
 from models.swin_transformer_v2 import TopoSwinTransformer, swin_v2_b
@@ -201,7 +201,7 @@ def main(**configs_dict):
         # transforms.ToTensor(),
     ])
 
-    home_dir = join(os.getenv('HOME'), 'data/raw_data')
+    home_dir = join(os.getenv('HOME'), '/Users/chiuchiu/Downloads/ISIC2018')
     # dataset_paths = {'Prostate': join(home_dir, 'Prostate/rois'),
     #                  'Retina': None}
     dataset_paths = {'Prostate': join(home_dir, 'Prostate/rois'),
@@ -327,6 +327,9 @@ def main(**configs_dict):
 
     if not use_cnn:
         # only topo models
+        
+        
+        
         name = f"{cluster_id}_only_topo_{topo_model}"
     elif use_ph:
         # cnn + topo
