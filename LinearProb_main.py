@@ -12,7 +12,7 @@ from timm.utils import accuracy
 import numpy as np
 import time
 import datetime
-
+from torch import optim
 
 # dataset
 from dataset.isic_dataset import ISICDataset
@@ -77,8 +77,11 @@ def evaluate(args,data_loader, model, device):
 
 def main(args):
     # Meta Info
+    print("Start Running: ")
+    print("{}".format(args).replace(', ', ',\n'))
+
     device = torch.device(args.device)
-    input_size = 224
+    input_size = args.image_size
     mean_std = {
         "Prostate": {"mean": [0.6576, 0.4719, 0.6153], "std": [0.2117, 0.2266, 0.1821]},
         "Glaucoma": {"mean": [0.7266, 0.3759, 0.0983], "std": [0.1806, 0.1580, 0.0861]},
@@ -182,6 +185,7 @@ def main(args):
         lr=args.lr,
         weight_decay=args.weight_decay,
         )
+    scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.997)
     
     print(optimizer)
 
@@ -228,6 +232,7 @@ def main(args):
         clip_grad_norm_(model.parameters(), 5)
 
         optimizer.step()
+        scheduler.step()
 
         epoch_loss.append(loss.detach().cpu().float().numpy())
         epoch_acc.append(acc1.detach().cpu().float().numpy())
