@@ -31,12 +31,22 @@ from pytorch_pretrained_vit import ViT
 
 def load_model(args,num_classes=7):
     if args.model_name == 'swin':
-        model = model = swin_v2_b(weights="IMAGENET1K_V1", num_classes=1000,).to(args.device)
+        model = swin_v2_b(weights="IMAGENET1K_V1", num_classes=1000,).to(args.device)
         model.head = nn.Linear(1024,num_classes)
+
+        for _, p in model.named_parameters():
+            p.requires_grad = False
+        for _, p in model.head.named_parameters():
+            p.requires_grad = True
 
     elif args.model_name == 'vit':
         model = ViT('B_16_imagenet1k', pretrained=True,image_size=args.image_size).to(args.device)
         model.fc = nn.Linear(768,num_classes)
+        
+        for _, p in model.named_parameters():
+            p.requires_grad = False
+        for _, p in model.fc.named_parameters():
+            p.requires_grad = True
     
     return model
 
@@ -164,13 +174,7 @@ def main(args):
 
 
     # Load Model
-    model = load_model(args)
-
-    # Freeze model but head
-    for _, p in model.named_parameters():
-        p.requires_grad = False
-    for _, p in model.head.named_parameters():
-        p.requires_grad = True
+    model = load_model(args)    
 
     model.to(device)
     print("Model = %s" % str(model))
