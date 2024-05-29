@@ -64,7 +64,10 @@ def evaluate(args,data_loader, model, device):
             # imge: N x 3 x W x H 
             # target: N x num_classes
         img = img.to(device)
-        pred,_ = model(img) #N x num_classes
+        if args.model_name == 'swin':
+            pred,_ = model(img) #N x num_classes
+        elif args.model_name == 'vit':
+            pred = model(img)
     
         # output is a list, each element in a list is a tensor contains class probability.
         loss = 0
@@ -215,7 +218,11 @@ def main(args):
                 # imge: N x 3 x W x H 
                 # target: N x num_classes
             img = img.to(device)
-            pred,_ = model(img) #N x num_classes
+
+            if args.model_name == 'swin':
+                pred,_ = model(img) #N x num_classes
+            elif args.model_name == 'vit':
+                pred = model(img)
 
             # output is a list, each element in a list is a tensor contains class probability.
             loss = 0
