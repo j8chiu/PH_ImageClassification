@@ -300,8 +300,6 @@ if __name__ == "__main__":
     parser.add_argument('--model_name', default='SwinV2B20', type=str,
                         help='Name of model to train')
     
-    parser.add_argument('--model_name', default='SwinV2B20', type=str,
-                        help='Name of model to train')
     
 
     args = parser.parse_args()
@@ -311,5 +309,5 @@ if __name__ == "__main__":
     main(args)
 
 
-# python -m SwinV2_train_main --batch_size 64 --device cuda --lr 1e-3 --epochs 50
-# python -m SwinV2_train_main --batch_size 32 --device cuda
+# python -m LinearProb_main --batch_size 64 --device cuda --lr 1e-3 --epochs 50 --model_name vit
+# python -m LinearProb_main --batch_size 32 --device cuda
