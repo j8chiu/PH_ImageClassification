@@ -17,7 +17,7 @@ import datetime
 
 class ISICDataset(Dataset):
     def __init__(self, data_dir='data/raw_data/ISIC2018', transform=None,
-                  is_train=True,device='cuda'):
+                  is_train=True,device='cuda',load_pd=True):
         """SKin Lesion"""
         self.data_dir = data_dir
         self.transform = transform

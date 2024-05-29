@@ -9,7 +9,7 @@ import numpy as np
 from torch.nn.utils import clip_grad_norm_
 from pytorch_pretrained_vit import ViT
 import os
-
+from pd_encoder import PersistenceDiagramEncoder 
 
 def freeze_model(model):
     for param in model.parameters():
@@ -122,6 +122,7 @@ class CrossPHGNet(nn.Module):
     def __init__(
         self,
         embed_dim=768,
+        pd_dim = 4,
         num_heads=12,
         mlp_ratio=4,
         norm_layer = nn.LayerNorm,
@@ -140,8 +141,8 @@ class CrossPHGNet(nn.Module):
 
         self.cls_token = nn.Parameter(torch.zeros(1, 1, embed_dim,dtype=torch.bfloat16))
 
-        # TODO: PD encoder specifics
-        # self.pd_encoder = 
+        # PD encoder specifics
+        self.pd_encoder = PersistenceDiagramEncoder(input_dim = pd_dim)
 
         self.fusion = nn.ModuleList([
                 CrossPHGBlock(topo_embed=1024,
@@ -174,7 +175,7 @@ class CrossPHGNet(nn.Module):
         print('patches shape: ',out.shape)
         out = self.vit.positional_embedding(out)
 
-        pd_feats = self.pd_encoder(pd)
+        pd_feats = self.pd_encoder(pd) # N x 1024
 
         for blk in self.fusion:
             out = blk(img_feats=out,topo_feats=pd_feats,mask=mask)
