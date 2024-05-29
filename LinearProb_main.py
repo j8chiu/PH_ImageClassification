@@ -37,6 +37,8 @@ def load_model(args,num_classes=7):
     elif args.model_name == 'vit':
         model = ViT('B_16_imagenet1k', pretrained=True,image_size=args.image_size).to(args.device)
         model.fc = nn.Linear(768,num_classes)
+    
+    return model
 
 
 @torch.no_grad()
