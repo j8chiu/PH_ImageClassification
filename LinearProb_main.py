@@ -27,6 +27,18 @@ from torch.nn.utils import clip_grad_norm_
 
 from pytorch_pretrained_vit import ViT
 
+
+
+def load_model(args,num_classes=7):
+    if args.model_name == 'swin':
+        model = model = swin_v2_b(weights="IMAGENET1K_V1", num_classes=1000,).to(args.device)
+        model.head = nn.Linear(1024,num_classes)
+
+    elif args.model_name == 'vit':
+        model = ViT('B_16_imagenet1k', pretrained=True,image_size=args.image_size).to(args.device)
+        model.fc = nn.Linear(768,num_classes)
+
+
 @torch.no_grad()
 def evaluate(args,data_loader, model, device):
     # switch to evaluation mode
@@ -147,12 +159,7 @@ def main(args):
 
 
     # Load Model
-    # Load Model
-    model = swin_v2_b(weights="IMAGENET1K_V1", num_classes=1000,).to(device)
-    model.head = nn.Linear(in_features=1024, out_features=num_classes, bias=True).to(device)
-
-    # model = ViT('B_16_imagenet1k', pretrained=True,image_size=224).to(device)
-    # model.fc = nn.Linear(in_features=768, out_features=num_classes, bias=True).to(device)
+    model = load_model(args)
 
     # Freeze model but head
     for _, p in model.named_parameters():
@@ -275,6 +282,7 @@ if __name__ == "__main__":
     parser.add_argument('--dataset_name',default='ISIC',type=str,
                         help='dataset name')
     parser.add_argument('--data_dir',default='data/raw_data')
+    parser.add_argument('--image_size',default=224,type=int)
     
     # optimize parameter
     parser.add_argument('--weight_decay', type=float, default=0,
@@ -286,6 +294,12 @@ if __name__ == "__main__":
     # output
     parser.add_argument('--output_dir', default='./results',
                         help='path where to save, empty for no saving')
+    
+    
+    # model
+    parser.add_argument('--model_name', default='SwinV2B20', type=str,
+                        help='Name of model to train')
+    
     parser.add_argument('--model_name', default='SwinV2B20', type=str,
                         help='Name of model to train')
     
