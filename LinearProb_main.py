@@ -69,15 +69,12 @@ def evaluate(args,data_loader, model, device):
         elif args.model_name == 'vit':
             pred = model(img)
     
-        # output is a list, each element in a list is a tensor contains class probability.
-        loss = 0
-        acc1 = 0
         target = target.to(device)
 
         criterion = torch.nn.CrossEntropyLoss()
-        loss += criterion(pred, target)
+        loss = criterion(pred, target)
         class_label = torch.argmax(target, dim=1)
-        acc1 += accuracy(pred, class_label, topk=(1,))[0]
+        acc1 = accuracy(pred, class_label, topk=(1,))[0]
 
         epoch_loss.append(loss.cpu().float().numpy())
         epoch_acc.append(acc1.cpu().float().numpy())
@@ -211,8 +208,6 @@ def main(args):
     for epoch in tqdm(range(args.epochs)):
         epoch_loss = [] 
         epoch_acc = []
-
-        
         for img, target in tqdm(train_loader):
             # Input:
                 # imge: N x 3 x W x H 
@@ -224,34 +219,31 @@ def main(args):
             elif args.model_name == 'vit':
                 pred = model(img)
 
-            # output is a list, each element in a list is a tensor contains class probability.
-            loss = 0
-            acc1 = 0
-
             criterion = torch.nn.CrossEntropyLoss()
             target = target.to(device)
-            loss += criterion(pred, target)
+            loss = criterion(pred, target)
             class_label = torch.argmax(target, dim=1)
-            acc1 += accuracy(pred, class_label, topk=(1,))[0]
+            acc1 = accuracy(pred, class_label, topk=(1,))[0]
 
-        # Back Prop. #################################################################
-        optimizer.zero_grad()
-        loss.backward()
+            # Back Prop. #################################################################
+            optimizer.zero_grad()
+            loss.backward()
 
-        # gradient clipping
-        for p in model.parameters(): # addressing gradient vanishing
-            if p.requires_grad and p.grad is not None:
-                p.grad = torch.nan_to_num(p.grad, nan=0.0)
-        clip_grad_norm_(model.parameters(), 5)
+            # gradient clipping
+            for p in model.parameters(): # addressing gradient vanishing
+                if p.requires_grad and p.grad is not None:
+                    p.grad = torch.nan_to_num(p.grad, nan=0.0)
+            clip_grad_norm_(model.parameters(), 5)
 
-        optimizer.step()
-        scheduler.step()
+            optimizer.step()
+            scheduler.step()
 
-        epoch_loss.append(loss.detach().cpu().float().numpy())
-        epoch_acc.append(acc1.detach().cpu().float().numpy())
-        # Update record
-        train_loss_record.append(loss.detach().cpu().float().numpy())
-        train_acc_record.append(loss.detach().cpu().float().numpy())
+            epoch_loss.append(loss.detach().cpu().float().numpy())
+            epoch_acc.append(acc1.detach().cpu().float().numpy())
+
+            # Update record
+            train_loss_record.append(loss.detach().cpu().float().numpy())
+            train_acc_record.append(loss.detach().cpu().float().numpy())
 
         epoch_loss = np.mean(epoch_loss)
         epoch_acc = np.mean(epoch_acc)

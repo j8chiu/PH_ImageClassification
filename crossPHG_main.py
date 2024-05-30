@@ -55,8 +55,8 @@ def evaluate(args,data_loader, model, device):
         # imge: N x 3 x W x H 
         # target: N x num_classes
         img = img.to(device)
-        labels = labels.argmax(dim=1) if labels.ndim > 1 else labels
         labels = labels.to(device)
+        labels = labels.argmax(dim=1) if labels.ndim > 1 else labels
         pd = pd.to(device)
 
         pred = model(img,pd)
@@ -211,6 +211,7 @@ def main(args):
             # Input:
                 # imge: N x 3 x W x H 
                 # target: N x num_classes
+            optimizer.zero_grad()
             img = img.to(device)
             labels = labels.argmax(dim=1) if labels.ndim > 1 else labels
             labels = labels.to(device)
@@ -223,7 +224,7 @@ def main(args):
             acc1 = accuracy(pred, labels, topk=(1,))[0]
 
             # Back Prop. #################################################################
-            optimizer.zero_grad()
+            
             loss.backward()
             # gradient clipping
             for p in model.parameters(): # addressing gradient vanishing
@@ -247,11 +248,11 @@ def main(args):
 
 
         # Evaluate #########################################################################    
-        loss,acc1 = evaluate(args,val_loader, model, device)
-        eval_loss_record.append(loss)
-        eval_acc_record.append(acc1)
-        print(f"Accuracy of the network on the test images: {acc1}")
-        max_accuracy = max(max_accuracy, acc1)
+        loss_eval,acc_eval = evaluate(args,val_loader, model, device)
+        eval_loss_record.append(loss_eval)
+        eval_acc_record.append(acc_eval)
+        print(f"Accuracy of the network on the test images: {acc_eval}")
+        max_accuracy = max(max_accuracy, acc_eval)
         print(f'Max accuracy: {max_accuracy:.2f}%')
 
         if args.output_dir and (epoch % 10 == 1 or epoch + 1 == args.epochs):
