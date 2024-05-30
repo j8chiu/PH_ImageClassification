@@ -7,9 +7,9 @@ import os
 import concurrent.futures
 
 # Paths
-image_dir = '/Users/chiuchiu/Downloads/ISIC2018/train'
-label_path = '/Users/chiuchiu/Downloads/ISIC2018/label_train.csv'
-output_dir = '/Users/chiuchiu/Downloads/ISIC2018/train_ph'
+image_dir = 'data/raw_data/ISIC2018/test'
+label_path = 'data/raw_data/ISIC2018/label_test.csv'
+output_dir = 'data/raw_data/ISIC2018/test_ph'
 
 # Load labels
 labels = pd.read_csv(label_path)

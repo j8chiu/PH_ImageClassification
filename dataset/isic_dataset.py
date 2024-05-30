@@ -4,7 +4,6 @@ import os.path
 import numpy as np
 #from batchgenerators.utilities.file_and_folder_operations import *
 from skimage import io
-from PIL import Image
 import pandas as pd
 from torch.utils.data import Dataset
 from torch.utils.data.dataloader import DataLoader
@@ -12,110 +11,55 @@ from einops import repeat
 import cv2
 from torchvision import transforms
 import torch
-import time
-import datetime
+
 
 class ISICDataset(Dataset):
-    def __init__(self, data_dir='data/raw_data/ISIC2018', transform=None,
-                  is_train=True,device='cuda',load_pd=True):
-        """SKin Lesion"""
+    def __init__(self, data_dir='data/data_raw/ISIC2018', 
+                 transform=None, 
+                 is_train=True,
+                 load_pd = False):
+        
         self.data_dir = data_dir
         self.transform = transform
         self.is_train = is_train
-        self.device = device
-
-        # self.pd_dir = join(self.img_path, "persistent_diagram_1_old")
-        # self.pl_dir = join(self.img_path, "persistent_landscape_old")
-        # self.data, self.targets = self.get_data(fold)
+        self.load_pd = load_pd
 
         self.classes_name = ['MEL', 'NV', 'BCC', 'AKIEC', 'BKL', 'DF', 'VASC']
         self.classes = list(range(len(self.classes_name)))
 
-        if self.is_train:
-            self.data_path = os.path.join(self.data_dir,'train')
-            csv = os.path.join(self.data_dir,'label_train.csv')
-        else:
-            self.data_path = os.path.join(self.data_dir,'test')
-            csv = os.path.join(self.data_dir,'label_test.csv')
+        self.data_path = os.path.join(self.data_dir, 'train_ph' if self.is_train else 'test_ph')
+        self.npy_files = [os.path.join(self.data_path, f) for f in os.listdir(self.data_path) if f.endswith('.npy')]
 
-        self.data = os.listdir(self.data_path)
-
-        csvfile = pd.read_csv(csv)
-        raw_data = csvfile.values  
-
-        self.data_names = []
-        self.targets = []
-        for data_list in raw_data:
-            image_name = data_list[0]+'.jpg'
-            self.data_names .append(os.path.join(self.data_path,image_name))
-            label = torch.tensor(np.array(data_list[1:],dtype=np.float32)) # one_hot label
-            self.targets.append(label)
-
-        # self.target_img_dict = {}
-        # targets = np.array(self.targets)
-        # for target in self.classes:
-        #     indexes = np.nonzero(targets == target)[0]
-        #     self.target_img_dict.update({target: indexes})
-
-    def __getitem__(self, i):
-        """
-                Args:
-                    index (int): Index
-                Returns:
-                    tuple: (sample, target) where target is class_index of the
-                           target class.
-                """
-        # data_loading_start_time = time.time()
-        path = self.data_names[i]
-        #case = os.path.basename(path).split(".")[0]
-        target = self.targets[i] # one-hot
-
-        img = io.imread(path)
-
-        #img = Image.open(path)
-       
-
-        # img = pil_loader(path)
-
-        pd = []
-        pl = []
-        # for mode in ['r', 'g', 'b', 'gray', 'r_inverse', 'g_inverse', 'b_inverse', 'gray_inverse']:
-        #     for d in [0, 1]:
-        #         pd.append(np.load(join(self.pd_dir, case, f'{mode}_{d}.npy')))
-        #         pl.append(np.load(join(self.pl_dir, case, f'{mode}_{d}.npy')))
-
-        # for d in [0, 1]:
-        #     pd.append(np.load(join(self.pd_dir, case, f'dim_{d}.npy')))
-        #     pl.append(np.load(join(self.pl_dir, case, f'dim_{d}.npy')))
-
-        # pd = [np.load(join(self.pd_dir, case, f'dim_{x}.npy')) for x in range(0, 2)]
-        # pd = process_pd(pd, dims=[0, 1], samples=73, case=case)
-
-        #pd = process_pd(pd, dims=[0, 1], samples=85, case=case)
-
-        if self.transform is not None:
+    def __getitem__(self, index):
+        npy_path = self.npy_files[index]
+        data = np.load(npy_path, allow_pickle=True).item()
+        img = io.imread(data['image_path'])
+        if self.transform:
             img = self.transform(img)
-        #img = img.bfloat16()
         
-        # data_loading_end_time = time.time()
-        # data_loading_time = data_loading_end_time - data_loading_start_time
-        # print(f"Data loading time: {datetime.timedelta(seconds=int(data_loading_time))}")
+        label_values = list(data['label'].values())
+        label = torch.tensor(label_values, dtype=torch.float32)
 
-        return img, target, #pd, np.vstack(pl)
-
-        # return img, target, pd, np.vstack(pl), \
-        #     cv2.cvtColor(cv2.imread(path), cv2.COLOR_BGR2RGB), path
+        if self.load_pd:
+            pd = data['diagram'][0]  # Assuming this returns a list of (birth, death, group_index)
+            pl = data['landscape']
+            return img, label, pd, pl
+        else:
+            return img,label
 
     def __len__(self):
-        return len(self.data_names)
+        return len(self.npy_files)
 
-
+# Example use
 if __name__ == "__main__":
+    transform = transforms.Compose([
+        transforms.ToTensor(),  # Example transformation
+    ])
+    dataset = ISICDataset(transform=transform)
+    dataloader = DataLoader(dataset, batch_size=2, shuffle=True)
 
-    train_transform = transforms.Compose([
-        transforms.ToTensor(),])
-
-    data = ISICDataset(transform=train_transform)
-    dataloader = DataLoader(data, batch_size=2)
-    for item in dataloader:
-        print(item)
+    for img, label, pd, pl in dataloader:
+        print("Image Shape:", img.shape)
+        print("Label:", label)
+        print("Persistence Diagram:", pd)
+        print("Persistence Landscape:", pl)

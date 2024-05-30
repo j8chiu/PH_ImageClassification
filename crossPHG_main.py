@@ -27,6 +27,19 @@ from PHG_cross_attn import CrossPHGNet
 
 
 
+def load_model(args):
+    if args.model_name == 'crossPHG':
+        model = CrossPHGNet(
+            embed_dim=768,
+            topo_embed = 1024,
+            pd_dim = 4,
+            num_heads=12,
+            norm_layer = nn.LayerNorm,
+            device='cuda',
+            depth = 12,
+            num_classes = 7,)
+
+    return model
 
 
 
@@ -139,14 +152,16 @@ def main(args):
 
     train_set = datasets[args.dataset_name](
         data_dir=data_path,
-        transform=train_transform, is_train=True,
-        device=device
+        transform=train_transform, 
+        is_train=True,
+        load_pd=True,
     )
     # from torchvision.models.swin_transformer.S
     val_set = datasets[args.dataset_name](
         data_dir=data_path,
-        transform=val_transform, is_train=False,
-        device=device
+        transform=val_transform, 
+        is_train=False,
+        load_pd=True,
     )
 
     train_loader = DataLoader(train_set, batch_size=args.batch_size,
@@ -192,26 +207,23 @@ def main(args):
         epoch_acc = []
 
         
-        for img, target in tqdm(train_loader):
+        for img, labels, pd, pl in tqdm(train_loader):
             # Input:
                 # imge: N x 3 x W x H 
                 # target: N x num_classes
             img = img.to(device)
+            labels = labels.argmax(dim=1) if labels.ndim > 1 else labels
+            labels = labels.to(device)
+            pd = pd.to(device)
 
-            if args.model_name == 'swin':
-                pred,_ = model(img) #N x num_classes
-            elif args.model_name == 'vit':
-                pred = model(img)
-
+            pred = model(img,pd)
             # output is a list, each element in a list is a tensor contains class probability.
             loss = 0
             acc1 = 0
 
             criterion = torch.nn.CrossEntropyLoss()
-            target = target.to(device)
-            loss += criterion(pred, target)
-            class_label = torch.argmax(target, dim=1)
-            acc1 += accuracy(pred, class_label, topk=(1,))[0]
+            loss += criterion(pred, labels)
+            acc1 += accuracy(pred, labels, topk=(1,))[0]
 
         # Back Prop. #################################################################
         optimizer.zero_grad()
@@ -222,6 +234,7 @@ def main(args):
             if p.requires_grad and p.grad is not None:
                 p.grad = torch.nan_to_num(p.grad, nan=0.0)
         clip_grad_norm_(model.parameters(), 5)
+
 
         optimizer.step()
         scheduler.step()
@@ -306,5 +319,7 @@ if __name__ == "__main__":
     main(args)
 
 
-# python -m LinearProb_main --batch_size 64 --device cuda --lr 1e-3 --epochs 50 --model_name vit
+# python -m crossPHG_main --batch_size 4 --device cpu --lr 1e-3 --epochs 50 --model_name crossPHG
+
+
 # python -m LinearProb_main --batch_size 32 --device cuda

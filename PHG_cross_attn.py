@@ -11,6 +11,7 @@ from pytorch_pretrained_vit import ViT
 import os
 from pd_encoder import PersistenceDiagramEncoder 
 
+
 def freeze_model(model):
     for param in model.parameters():
         param.requires_grad = False
@@ -122,13 +123,14 @@ class CrossPHGNet(nn.Module):
     def __init__(
         self,
         embed_dim=768,
+        topo_embed = 1024,
         pd_dim = 4,
         num_heads=12,
-        mlp_ratio=4,
         norm_layer = nn.LayerNorm,
         device='cuda',
         depth = 12,
-        num_classes = 7
+        num_classes = 7,
+        has_mlp = True,
     ):
         super().__init__()
 
@@ -145,12 +147,12 @@ class CrossPHGNet(nn.Module):
         self.pd_encoder = PersistenceDiagramEncoder(input_dim = pd_dim)
 
         self.fusion = nn.ModuleList([
-                CrossPHGBlock(topo_embed=1024,
-                            embed_size=768, 
-                            num_heads=12, 
-                            norm_layer=nn.LayerNorm,
+                CrossPHGBlock(topo_embed=topo_embed,
+                            embed_size=embed_dim, 
+                            num_heads=num_heads, 
+                            norm_layer=norm_layer,
                             self_attn_model=self.vit,
-                            has_mlp = True,
+                            has_mlp = has_mlp,
                             curr_layer=curr_layer) for curr_layer in range(depth)])
 
         
