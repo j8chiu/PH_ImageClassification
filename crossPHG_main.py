@@ -8,7 +8,7 @@ from pathlib import Path
 from torchvision import transforms
 import torch
 import torch.nn as nn
-from timm.utils import accuracy
+#from timm.utils import accuracy
 import numpy as np
 import time
 import datetime
@@ -24,7 +24,7 @@ from torch.utils.data.dataloader import DataLoader
 # model
 from torch.nn.utils import clip_grad_norm_
 from PHG_cross_attn import CrossPHGNet
-from pd_baseline import collate_fn
+from pd_baseline import collate_fn, compute_accuracy
 
 
 
@@ -65,7 +65,8 @@ def evaluate(args,data_loader, model, device):
         loss = criterion(pred, labels)
         class_label = torch.argmax(labels, dim=1)
 
-        acc1 = accuracy(pred, class_label, topk=(1,))[0]
+       #acc1 = accuracy(pred, class_label, topk=(1,))[0]
+        acc1 = compute_accuracy(pred,class_label)
 
         epoch_loss.append(loss.cpu().float().numpy())
         epoch_acc.append(acc1.cpu().float().numpy())
@@ -224,8 +225,8 @@ def main(args):
             criterion = torch.nn.CrossEntropyLoss()
             loss = criterion(pred, labels)
             class_label = torch.argmax(labels, dim=1)
-            acc1 = accuracy(pred, class_label, topk=(1,))[0]
-
+            #acc1 = accuracy(pred, class_label, topk=(1,))[0]
+            acc1 = compute_accuracy(pred,class_label)
             # Back Prop. #################################################################
             
             loss.backward()
