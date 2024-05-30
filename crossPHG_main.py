@@ -182,7 +182,7 @@ def main(args):
     total_num = sum(p.numel() for p in model.parameters())
     train_num = sum(p.numel() for p in model.parameters() if p.requires_grad)
     print("Total of Parameters: {}M".format(round(total_num / 1e6, 2)))
-    print("Train Parameters: {}".format(round(train_num, 2)))
+    print("Train Parameters: {}M".format(round(train_num/1e6, 2)))
 
     print("lr: %.3e" % args.lr)
 
@@ -329,4 +329,4 @@ if __name__ == "__main__":
 # python -m crossPHG_main --batch_size 4 --device cpu --lr 1e-3 --epochs 50 --model_name crossPHG
 
 
-# python -m LinearProb_main --batch_size 32 --device cuda
+# python -m crossPHG_main --batch_size 32 --device cuda --lr 1e-3 --epochs 50 --model_name crossPHG
