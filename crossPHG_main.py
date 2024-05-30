@@ -262,20 +262,24 @@ def main(args):
         max_accuracy = max(max_accuracy, acc1)
         print(f'Max accuracy: {max_accuracy:.2f}%')
 
+        if args.output_dir and (epoch % 10 == 1 or epoch + 1 == args.epochs):
+            check_pt_path = os.path.join(args.output_dir,'crossPHG_ckpt__{}_{}.pth'.format(str(args.epochs),str(epoch)))
+            to_save = {'model': model.state_dict(),
+                        'optimizer': optimizer.state_dict(),
+                        'epoch': epoch,
+                        'train_loss':train_loss_record,
+                        'eval_loss':eval_loss_record,
+                        'train_acc':train_acc_record,
+                        'eval_acc':eval_acc_record}
+    
+            torch.save(to_save,check_pt_path)
+
     
     total_time = time.time() - start_time
     total_time_str = str(datetime.timedelta(seconds=int(total_time)))
     print('Training time {}'.format(total_time_str))
 
-    if args.output_dir:
-        check_pt_path = os.path.join(args.output_dir,'linearProb_{}_checkpoint_{}_{}.pth'.format(args.dataset_name,args.model_name,str(epoch)))
-        to_save = {'model': model.state_dict(),
-                   'train_loss':train_loss_record,
-                   'eval_loss':eval_loss_record,
-                   'train_acc':train_acc_record,
-                   'eval_acc':eval_acc_record}
-        
-        torch.save(to_save,check_pt_path)
+
 
 
 
