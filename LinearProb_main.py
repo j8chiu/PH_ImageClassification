@@ -157,14 +157,14 @@ def main(args):
 
     train_set = datasets[args.dataset_name](
         data_dir=data_path,
-        transform=train_transform, is_train=True,
-        device=device
+        transform=train_transform, 
+        is_train=True,
     )
     # from torchvision.models.swin_transformer.S
     val_set = datasets[args.dataset_name](
         data_dir=data_path,
-        transform=val_transform, is_train=False,
-        device=device
+        transform=val_transform, 
+        is_train=False,
     )
 
     train_loader = DataLoader(train_set, batch_size=args.batch_size,
@@ -208,6 +208,7 @@ def main(args):
     for epoch in tqdm(range(args.epochs)):
         epoch_loss = [] 
         epoch_acc = []
+        model.train()
         for img, target in tqdm(train_loader):
             # Input:
                 # imge: N x 3 x W x H 
