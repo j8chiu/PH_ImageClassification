@@ -51,28 +51,26 @@ def evaluate(args,data_loader, model, device):
     epoch_loss = [] 
     epoch_acc = []
 
-    for img, target in tqdm(data_loader):
+    for img, labels, pd, pl in tqdm(data_loader):
         # Input:
-            # imge: N x 3 x W x H 
-            # target: N x num_classes
+        # imge: N x 3 x W x H 
+        # target: N x num_classes
         img = img.to(device)
-        if args.model_name == 'swin':
-            pred,_ = model(img) #N x num_classes
-        elif args.model_name == 'vit':
-            pred = model(img)
-    
-        # output is a list, each element in a list is a tensor contains class probability.
+        labels = labels.argmax(dim=1) if labels.ndim > 1 else labels
+        labels = labels.to(device)
+        pd = pd.to(device)
+
+        pred = model(img,pd)
+        
         loss = 0
         acc1 = 0
-        target = target.to(device)
 
         criterion = torch.nn.CrossEntropyLoss()
-        loss += criterion(pred, target)
-        class_label = torch.argmax(target, dim=1)
-        acc1 += accuracy(pred, class_label, topk=(1,))[0]
+        loss += criterion(pred, labels)
+        acc1 += accuracy(pred, labels, topk=(1,))[0]
 
-        epoch_loss.append(loss.cpu().float().numpy())
-        epoch_acc.append(acc1.cpu().float().numpy())
+    epoch_loss.append(loss.cpu().float().numpy())
+    epoch_acc.append(acc1.cpu().float().numpy())
 
     epoch_loss = np.mean(epoch_loss)
     epoch_acc = np.mean(epoch_acc)
