@@ -205,8 +205,8 @@ def main(args):
     for epoch in tqdm(range(args.epochs)):
         epoch_loss = [] 
         epoch_acc = []
-
         
+        model.train()
         for img, labels, pd, pl in tqdm(train_loader):
             # Input:
                 # imge: N x 3 x W x H 
