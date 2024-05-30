@@ -208,6 +208,7 @@ def main(args):
     for epoch in tqdm(range(args.epochs)):
         epoch_loss = [] 
         epoch_acc = []
+
         model.train()
         for img, target in tqdm(train_loader):
             # Input:
@@ -222,6 +223,7 @@ def main(args):
 
             criterion = torch.nn.CrossEntropyLoss()
             target = target.to(device)
+            print('target: ',target)
             loss = criterion(pred, target)
             class_label = torch.argmax(target, dim=1)
             acc1 = accuracy(pred, class_label, topk=(1,))[0]

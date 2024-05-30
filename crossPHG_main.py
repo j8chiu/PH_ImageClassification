@@ -46,8 +46,8 @@ def load_model(args):
 
 @torch.no_grad()
 def evaluate(args,data_loader, model, device):
-    # switch to evaluation mode
     model.eval()
+
     epoch_loss = [] 
     epoch_acc = []
     for img, labels, pd, pl in tqdm(data_loader):
@@ -56,15 +56,17 @@ def evaluate(args,data_loader, model, device):
         # target: N x num_classes
         img = img.to(device)
         labels = labels.to(device)
-        labels = labels.argmax(dim=1) if labels.ndim > 1 else labels
+
         pd = pd.to(device)
 
         pred = model(img,pd)
         
         criterion = torch.nn.CrossEntropyLoss()
         loss = criterion(pred, labels)
+        class_label = torch.argmax(labels, dim=1)
 
-        acc1 = accuracy(pred, labels, topk=(1,))[0]
+        acc1 = accuracy(pred, class_label, topk=(1,))[0]
+
         epoch_loss.append(loss.cpu().float().numpy())
         epoch_acc.append(acc1.cpu().float().numpy())
 
@@ -205,7 +207,7 @@ def main(args):
     for epoch in tqdm(range(args.epochs)):
         epoch_loss = [] 
         epoch_acc = []
-        
+
         model.train()
         for img, labels, pd, pl in tqdm(train_loader):
             # Input:
@@ -213,15 +215,16 @@ def main(args):
                 # target: N x num_classes
             optimizer.zero_grad()
             img = img.to(device)
-            labels = labels.argmax(dim=1) if labels.ndim > 1 else labels
-            labels = labels.to(device)
+
+            labels = labels.to(device) # N x num_class
             pd = pd.to(device)
 
             pred = model(img,pd)
 
             criterion = torch.nn.CrossEntropyLoss()
             loss = criterion(pred, labels)
-            acc1 = accuracy(pred, labels, topk=(1,))[0]
+            class_label = torch.argmax(labels, dim=1)
+            acc1 = accuracy(pred, class_label, topk=(1,))[0]
 
             # Back Prop. #################################################################
             
