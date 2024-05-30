@@ -24,6 +24,7 @@ from torch.utils.data.dataloader import DataLoader
 # model
 from torch.nn.utils import clip_grad_norm_
 from PHG_cross_attn import CrossPHGNet
+from pd_baseline import collate_fn
 
 
 
@@ -35,7 +36,7 @@ def load_model(args):
             pd_dim = 4,
             num_heads=12,
             norm_layer = nn.LayerNorm,
-            device='cuda',
+            device=args.device,
             depth = 12,
             num_classes = 7,)
 
@@ -150,7 +151,7 @@ def main(args):
 
     train_set = datasets[args.dataset_name](
         data_dir=data_path,
-        transform=train_transform, 
+        transform=train_transform,
         is_train=True,
         load_pd=True,
     )
@@ -162,10 +163,14 @@ def main(args):
         load_pd=True,
     )
 
-    train_loader = DataLoader(train_set, batch_size=args.batch_size,
-                              shuffle=True,num_workers=12)
-    val_loader = DataLoader(val_set, batch_size=args.batch_size,
-                            shuffle=False,num_workers=12)
+    train_loader = DataLoader(train_set, 
+                              batch_size=args.batch_size,
+                              shuffle=True,
+                              collate_fn=collate_fn)#num_workers=12)
+    val_loader = DataLoader(val_set, 
+                            batch_size=args.batch_size,
+                            shuffle=False,
+                            collate_fn=collate_fn)#num_workers=12)
 
 
     # Load Model

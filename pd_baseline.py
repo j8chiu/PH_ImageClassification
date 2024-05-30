@@ -4,7 +4,7 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 import torchvision.transforms as transforms
 from models.pd_encoder import CombinedModel, PersistenceDiagramEncoder, Classifier
-from dataset.isicloader import ISICDataset  
+from dataset.isic_dataset import ISICDataset  
 import numpy as np
 import os
 
@@ -25,14 +25,15 @@ def remove_inf(data):
     return data
 
 def collate_fn(batch):
-    pds, labels = zip(*[(remove_inf(item[2]), item[1]) for item in batch if item[2].size > 0])
+    imgs, labels, pds, pls = zip(*[(item[0], item[1], remove_inf(item[2]), item[3]) for item in batch if item[2].size > 0])
     if len(pds) == 0:
         return None
     max_length = max(pd.shape[0] for pd in pds)
     pds_padded = pad_persistence_diagrams(pds, max_length)
     labels = torch.stack(labels)
+    imgs = torch.stack(imgs)
     pds_padded = torch.tensor(pds_padded, dtype=torch.float32)
-    return pds_padded, labels
+    return imgs, labels, pds_padded, pls
 
 
 def init_weights(m):

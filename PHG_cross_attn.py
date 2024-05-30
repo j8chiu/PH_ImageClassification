@@ -9,7 +9,7 @@ import numpy as np
 from torch.nn.utils import clip_grad_norm_
 from pytorch_pretrained_vit import ViT
 import os
-from pd_encoder import PersistenceDiagramEncoder 
+from models.pd_encoder import PersistenceDiagramEncoder 
 
 
 def freeze_model(model):
@@ -24,14 +24,14 @@ class FeedForward(nn.Module):
         self.add_norm = add_norm
 
         self.fc_liner = nn.Sequential(
-            nn.Linear(emb_size, hidden_size).bfloat16(),
+            nn.Linear(emb_size, hidden_size),
             nn.GELU(),
             # nn.Dropout(p=dropout),
-            nn.Linear(hidden_size, emb_size).bfloat16(),
+            nn.Linear(hidden_size, emb_size),
             nn.Dropout(p=dropout),
         )
 
-        self.LayerNorm = nn.LayerNorm(emb_size, eps=1e-6).bfloat16()
+        self.LayerNorm = nn.LayerNorm(emb_size, eps=1e-6)
 
     def forward(self, x):
         out = self.fc_liner(x)
@@ -54,11 +54,11 @@ class CrossAttention(nn.Module):
         
         self.scale = qk_scale or head_dim ** -0.5
 
-        self.wq = nn.Linear(dim, dim, bias=qkv_bias).bfloat16()
-        self.wk = nn.Linear(dim, dim, bias=qkv_bias).bfloat16()
-        self.wv = nn.Linear(dim, dim, bias=qkv_bias).bfloat16()
+        self.wq = nn.Linear(dim, dim, bias=qkv_bias)
+        self.wk = nn.Linear(dim, dim, bias=qkv_bias)
+        self.wv = nn.Linear(dim, dim, bias=qkv_bias)
         self.attn_drop = nn.Dropout(attn_drop)
-        self.proj = nn.Linear(dim, dim).bfloat16()
+        self.proj = nn.Linear(dim, dim)
         self.proj_drop = nn.Dropout(proj_drop)
 
     def forward(self,q,kv,mask=None): 
@@ -69,10 +69,10 @@ class CrossAttention(nn.Module):
         v = self.wv(kv).reshape(B, 1, self.num_heads, C // self.num_heads).permute(0, 2, 1, 3)  # B1C -> B1H(C/H) -> BH1(C/H)
 
         attn = (q @ k.transpose(-2, -1)) * self.scale  # BHN(C/H) @ BH1(C/H) -> BHN1
-        print('attn shape',attn.shape)
+        #print('attn shape',attn.shape)
 
         if mask is not None:
-            mask = mask[:,None,None,:].bfloat16()
+            mask = mask[:,None,None,:]
             attn -= 1000.0*(1.0-mask)
         attn = attn.softmax(dim=-1)
         attn = self.attn_drop(attn)
@@ -96,14 +96,14 @@ class CrossPHGBlock(nn.Module):
 
         self.has_mlp = has_mlp
 
-        self.topo_proj = nn.Linear(topo_embed,embed_size).bfloat16()
-        self.norm1 = norm_layer(embed_size).bfloat16()
-        self.cross_attn = CrossAttention(embed_size=embed_size,
+        self.topo_proj = nn.Linear(topo_embed,embed_size)
+        self.norm1 = norm_layer(embed_size)
+        self.cross_attn = CrossAttention(dim=embed_size,
                               num_heads=num_heads, 
-                              dropout=0.1)
+                              proj_drop=0.1)
         
         self.self_attn = self_attn_model.transformer.blocks[curr_layer].eval()
-        self.norm2 = norm_layer(embed_size).bfloat16()
+        self.norm2 = norm_layer(embed_size)
 
         if self.has_mlp:
             self.ffn = FeedForward(emb_size=embed_size,hidden_size=embed_size*4)
@@ -115,9 +115,9 @@ class CrossPHGBlock(nn.Module):
         img_feats = self.cross_attn(q=img_feats,kv=topo_feats)
         
         if self.has_mlp:
-            x = x + self.ffn(self.norm2(x))
+            img_feats = img_feats + self.ffn(self.norm2(img_feats))
 
-        return x # N, num_patches, E
+        return img_feats # N, num_patches, E
 
 class CrossPHGNet(nn.Module):
     def __init__(
@@ -126,6 +126,7 @@ class CrossPHGNet(nn.Module):
         topo_embed = 1024,
         pd_dim = 4,
         num_heads=12,
+        img_size = 224,
         norm_layer = nn.LayerNorm,
         device='cuda',
         depth = 12,
@@ -137,27 +138,27 @@ class CrossPHGNet(nn.Module):
         self.device = device
         # Image encoder specifics
         # ViT default patch embeddings
-        self.vit = ViT('B_16_imagenet1k', pretrained=True).to(torch.bfloat16).to(self.device) # construct and load 
+        self.vit = ViT('B_16_imagenet1k', pretrained=True,image_size=img_size).to(self.device) # construct and load 
         self.vit.fc = None
         freeze_model(self.vit)
 
-        self.cls_token = nn.Parameter(torch.zeros(1, 1, embed_dim,dtype=torch.bfloat16))
+        self.cls_token = nn.Parameter(torch.zeros(1, 1, embed_dim,dtype=torch.float32))
 
         # PD encoder specifics
         self.pd_encoder = PersistenceDiagramEncoder(input_dim = pd_dim)
 
         self.fusion = nn.ModuleList([
                 CrossPHGBlock(topo_embed=topo_embed,
-                            embed_size=embed_dim, 
-                            num_heads=num_heads, 
-                            norm_layer=norm_layer,
-                            self_attn_model=self.vit,
-                            has_mlp = has_mlp,
-                            curr_layer=curr_layer) for curr_layer in range(depth)])
+                              self_attn_model = self.vit,
+                              embed_size=embed_dim, 
+                              num_heads=num_heads, 
+                              norm_layer=norm_layer,
+                              has_mlp = has_mlp,
+                              curr_layer=curr_layer) for curr_layer in range(depth)])
 
         
         #TODO: Head
-        self.cls_head = nn.Linear(embed_dim, num_classes).bfloat16()
+        self.cls_head = nn.Linear(embed_dim, num_classes)
 
         self.ce_loss = nn.CrossEntropyLoss()
 
@@ -168,13 +169,13 @@ class CrossPHGNet(nn.Module):
         '''
         N,_,H,W = img.shape
 
-        print('input shape: ',img.shape)
+        #print('input shape: ',img.shape)
   
         img = self.vit.patch_embedding(img)
         out = img.flatten(2).transpose(1, 2) # b,gh*gw,d
 
         out = torch.cat((self.vit.class_token.expand(N, -1, -1), out), dim=1) # b,num_patches,d
-        print('patches shape: ',out.shape)
+        #print('patches shape: ',out.shape)
         out = self.vit.positional_embedding(out)
 
         pd_feats = self.pd_encoder(pd) # N x 1024
