@@ -166,11 +166,13 @@ def main(args):
     train_loader = DataLoader(train_set, 
                               batch_size=args.batch_size,
                               shuffle=True,
-                              collate_fn=collate_fn)#num_workers=12)
+                              collate_fn=collate_fn,
+                              num_workers=12)
     val_loader = DataLoader(val_set, 
                             batch_size=args.batch_size,
                             shuffle=False,
-                            collate_fn=collate_fn)#num_workers=12)
+                            collate_fn=collate_fn,
+                            num_workers=12)
 
 
     # Load Model
