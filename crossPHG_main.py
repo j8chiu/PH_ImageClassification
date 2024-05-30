@@ -69,7 +69,7 @@ def evaluate(args,data_loader, model, device):
         acc1 = compute_accuracy(pred,class_label)
 
         epoch_loss.append(loss.cpu().float().numpy())
-        epoch_acc.append(acc1.cpu().float().numpy())
+        epoch_acc.append(acc1)
 
     epoch_loss = np.mean(epoch_loss)
     epoch_acc = np.mean(epoch_acc)
