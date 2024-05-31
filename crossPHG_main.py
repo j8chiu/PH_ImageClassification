@@ -66,7 +66,7 @@ def evaluate(args,data_loader, model, device):
         class_label = torch.argmax(labels, dim=1)
 
        #acc1 = accuracy(pred, class_label, topk=(1,))[0]
-        acc1 = compute_accuracy(pred,labels)
+        acc1 = compute_accuracy(pred,class_label)
 
         epoch_loss.append(loss.cpu().float().numpy())
         epoch_acc.append(acc1)
@@ -226,7 +226,7 @@ def main(args):
             loss = criterion(pred, labels)
             class_label = torch.argmax(labels, dim=1)
             #acc1 = accuracy(pred, class_label, topk=(1,))[0]
-            acc1 = compute_accuracy(pred,labels)
+            acc1 = compute_accuracy(pred,class_label)
             # Back Prop. #################################################################
             
             loss.backward()
