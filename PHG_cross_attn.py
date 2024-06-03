@@ -174,7 +174,7 @@ class CrossPHGNet(nn.Module):
         img = self.vit.patch_embedding(img)
         out = img.flatten(2).transpose(1, 2) # b,gh*gw,d
 
-        out = torch.cat((self.vit.class_token.expand(N, -1, -1), out), dim=1) # b,num_patches,d
+        out = torch.cat((self.cls_token.expand(N, -1, -1), out), dim=1) # b,num_patches,d
         #print('patches shape: ',out.shape)
         out = self.vit.positional_embedding(out)
 
