@@ -112,10 +112,11 @@ class CrossPHGBlock(nn.Module):
         # self_attention
         img_feats = self.self_attn(self.norm1(img_feats),mask=mask)
         topo_feats = self.topo_proj(topo_feats)
-        img_feats = self.cross_attn(q=img_feats,kv=topo_feats)
+        
+        fusion_feats = self.cross_attn(q=img_feats,kv=topo_feats)
         
         if self.has_mlp:
-            img_feats = img_feats + self.ffn(self.norm2(img_feats))
+            img_feats = img_feats + self.ffn(self.norm2(fusion_feats))
 
         return img_feats # N, num_patches, E
 
@@ -186,6 +187,11 @@ class CrossPHGNet(nn.Module):
         cls_out = self.cls_head(out[:,0,:]) # N, num_class
         
         return cls_out
+
+
+
+
+
 
 
 
