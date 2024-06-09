@@ -1,8 +1,10 @@
 # TopoClassification
 
+DSC214 Topological Analysis
+
 PyTorch implementation of the paper: 'PHG-Net: Persistent Homology Guided Medical Image Classification' (Accepted in the first round of WACV 2024).
 
-This repo is still messy. I will make it more readable and provide more detailed docs. （too busy recently)
+This repo is still messy. 
 
 
 ## Environment
