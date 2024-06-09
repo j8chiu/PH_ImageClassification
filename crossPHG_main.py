@@ -22,7 +22,6 @@ from dataset.isic_dataset import ISICDataset
 from torch.utils.data.dataloader import DataLoader
 
 # model
-from torch.nn.utils import clip_grad_norm_
 from PHG_cross_attn import CrossPHGNet
 from pd_baseline import collate_fn, compute_accuracy
 
@@ -62,8 +61,8 @@ def evaluate(args,data_loader, model, device):
         pred = model(img,pd)
         
         criterion = torch.nn.CrossEntropyLoss()
-        loss = criterion(pred, labels)
         class_label = torch.argmax(labels, dim=1)
+        loss = criterion(pred, class_label)
 
        #acc1 = accuracy(pred, class_label, topk=(1,))[0]
         acc1 = compute_accuracy(pred,class_label)
@@ -166,6 +165,7 @@ def main(args):
                               shuffle=True,
                               collate_fn=collate_fn,
                               num_workers=12)
+    
     val_loader = DataLoader(val_set, 
                             batch_size=args.batch_size,
                             shuffle=False,
@@ -223,18 +223,15 @@ def main(args):
             pred = model(img,pd)
 
             criterion = torch.nn.CrossEntropyLoss()
-            loss = criterion(pred, labels)
             class_label = torch.argmax(labels, dim=1)
+            loss = criterion(pred, class_label)
             #acc1 = accuracy(pred, class_label, topk=(1,))[0]
             acc1 = compute_accuracy(pred,class_label)
             # Back Prop. #################################################################
             
             loss.backward()
             # gradient clipping
-            for p in model.parameters(): # addressing gradient vanishing
-                if p.requires_grad and p.grad is not None:
-                    p.grad = torch.nan_to_num(p.grad, nan=0.0)
-            clip_grad_norm_(model.parameters(), 5)
+            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
 
             optimizer.step()
             scheduler.step()
