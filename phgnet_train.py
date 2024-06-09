@@ -10,7 +10,6 @@ import os
 from modifies_resnet50 import ResNet50
 
 torch.autograd.set_detect_anomaly(True)
-#no fucking cpu please
 device = torch.device("cuda")
 
 #hyperparameters
@@ -99,11 +98,7 @@ def train_model():
     dataset = ISICDataset(transform=train_transform, is_train=True)
     dataloader = DataLoader(dataset, batch_size=16, shuffle=True, collate_fn=collate_fn,num_workers=4)
 
-    #pd_encoder = PersistenceDiagramEncoder(input_dim=4)
-    #classifier = Classifier(input_dim=1024, num_classes=7)
-    #model = CombinedModel(pd_encoder, classifier).to(device)
     model = ResNet50().to(device)
-    #model.apply(init_weights)
 
     criterion_1 = nn.CrossEntropyLoss().cuda()
     criterion_2 = nn.CrossEntropyLoss().cuda()
