@@ -208,8 +208,10 @@ class CrossPHGNet(nn.Module):
         
         #TODO: Head
         self.cls_head = nn.Linear(embed_dim, num_classes)
+        self.topo_head = nn.Linear(topo_embed,num_classes)
 
         self.ce_loss = nn.CrossEntropyLoss()
+        
 
     def forward(self,img,pd,mask=None):
         '''
@@ -228,13 +230,15 @@ class CrossPHGNet(nn.Module):
         out = self.vit.positional_embedding(out)
 
         pd_feats = self.pd_encoder(pd) # N x 1024
+        
 
         for blk in self.fusion:
             out = blk(img_feats=out,topo_feats=pd_feats,mask=mask)
 
         cls_out = self.cls_head(out[:,0,:]) # N, num_class
+        pd_out = self.topo_head(pd_feats) 
         
-        return cls_out
+        return cls_out,pd_out
 
 
 

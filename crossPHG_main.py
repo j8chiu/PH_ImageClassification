@@ -58,14 +58,16 @@ def evaluate(args,data_loader, model, device):
 
         pd = pd.to(device)
 
-        pred = model(img,pd)
+        img_pred,topo_pred = model(img,pd)
         
         criterion = torch.nn.CrossEntropyLoss()
         class_label = torch.argmax(labels, dim=1)
-        loss = criterion(pred, class_label)
-
+        loss = criterion(img_pred, class_label) + 0.1*criterion(topo_pred,class_label)
+        pred = img_pred + 0.1*topo_pred
        #acc1 = accuracy(pred, class_label, topk=(1,))[0]
+
         acc1 = compute_accuracy(pred,class_label)
+
 
         epoch_loss.append(loss.cpu().float().numpy())
         epoch_acc.append(acc1)
@@ -220,12 +222,13 @@ def main(args):
             labels = labels.to(device) # N x num_class
             pd = pd.to(device)
 
-            pred = model(img,pd)
+            img_pred,topo_pred = model(img,pd)
 
             criterion = torch.nn.CrossEntropyLoss()
             class_label = torch.argmax(labels, dim=1)
-            loss = criterion(pred, class_label)
+            loss = criterion(img_pred, class_label) + 0.1*criterion(topo_pred,class_label)
             #acc1 = accuracy(pred, class_label, topk=(1,))[0]
+            pred = img_pred + 0.1*topo_pred
             acc1 = compute_accuracy(pred,class_label)
             # Back Prop. #################################################################
             
@@ -323,4 +326,4 @@ if __name__ == "__main__":
 # python -m crossPHG_main --batch_size 4 --device cpu --lr 1e-3 --epochs 50 --model_name crossPHG
 
 
-# python -m crossPHG_main --batch_size 64 --device cuda --lr 1e-2 --epochs 50 --model_name crossPHG
+# python -m crossPHG_main --batch_size 64 --device cuda --lr 1e-3 --epochs 50 --model_name crossPHG
