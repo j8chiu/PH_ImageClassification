@@ -320,8 +320,8 @@ if __name__ == "__main__":
     # model
     parser.add_argument('--model_name', default='SwinV2B20', type=str,
                         help='Name of model to train')
-    parser.add_argument('--alpha', default='SwinV2B20', type=str,
-                        help='Name of model to train')
+    parser.add_argument('--alpha', default=0.1, type=float,
+                        help='alpha (control topo feats)')
     
     
 
