@@ -240,7 +240,7 @@ class CrossPHGNet(nn.Module):
             img_feats,pd_feats = blk(img_feats=img_feats,topo_feats=pd_feats,mask=mask)
             
 
-        cls_out = self.cls_head(out[:,0,:]) # N, num_class
+        cls_out = self.cls_head(img_feats[:,0,:]) # N, num_class
         pd_out = self.topo_head(pd_feats.squeeze(1)) # N, num_class  
         
         return cls_out,pd_out
