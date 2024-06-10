@@ -335,4 +335,4 @@ if __name__ == "__main__":
 # python -m crossPHG_main --batch_size 4 --device cpu --lr 1e-3 --epochs 50 --model_name crossPHG
 
 
-# python -m crossPHG_main --batch_size 64 --device cuda --lr 1e-3 --epochs 50 --model_name crossPHG --remark topoLoss
+# python -m crossPHG_main --batch_size 64 --device cuda --lr 1e-2 --epochs 50 --model_name crossPHG --alpha 0.4 --remark topoLoss0.4

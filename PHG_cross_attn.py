@@ -138,6 +138,8 @@ class CrossPHGBlock(nn.Module):
         self.has_mlp = has_mlp
 
         self.topo_proj = nn.Linear(topo_embed,embed_size)
+        self.invs_topo_proj = nn.Linear(embed_size,topo_embed)
+
         self.norm1 = norm_layer(embed_size)
         self.cross_attn = CrossAttention(dim=embed_size,
                               num_heads=num_heads, 
@@ -152,9 +154,8 @@ class CrossPHGBlock(nn.Module):
     def forward(self,img_feats,topo_feats,mask=None):
         # self_attention
         img_feats = self.self_attn(self.norm1(img_feats),mask=mask) # N， num_patches + 1, 768
-        topo_feats = self.topo_proj(topo_feats) # N, 768
+        topo_feats = self.topo_proj(topo_feats) # N, 1, 768
 
-        topo_feats = topo_feats.unsqueeze(1) # N,1,768
         img_tokens = img_feats[:,1:,:] # N, num_patches, 768
         img_cls = img_feats[:,0:1,:]
 
@@ -165,8 +166,9 @@ class CrossPHGBlock(nn.Module):
             fusion_cls = img_cls + self.ffn(self.norm2(fusion_cls)) # N x 1 x 768
 
         img_feats = torch.concat((fusion_cls,img_tokens),dim=1)
+        topo_feats = self.invs_topo_proj(topo_feats) # N x 1 x 1024
 
-        return img_feats # N, num_patches, E
+        return img_feats,topo_feats # N, num_patches, E
 
 class CrossPHGNet(nn.Module):
     def __init__(
@@ -231,14 +233,15 @@ class CrossPHGNet(nn.Module):
         #print('patches shape: ',out.shape)
         out = self.vit.positional_embedding(out)
 
-        pd_feats = self.pd_encoder(pd) # N x 1024
+        pd_feats = self.pd_encoder(pd).unsqueeze(1) # N x 1 x 1024
         
-
+        
         for blk in self.fusion:
-            out = blk(img_feats=out,topo_feats=pd_feats,mask=mask)
+            img_feats,pd_feats = blk(img_feats=img_feats,topo_feats=pd_feats,mask=mask)
+            
 
         cls_out = self.cls_head(out[:,0,:]) # N, num_class
-        pd_out = self.topo_head(pd_feats) 
+        pd_out = self.topo_head(pd_feats.squeeze(1)) # N, num_class  
         
         return cls_out,pd_out
 
