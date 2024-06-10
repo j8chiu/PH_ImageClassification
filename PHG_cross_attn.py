@@ -290,7 +290,7 @@ class AllAttnPHGNet(nn.Module):
         
         #TODO: Head
         self.cls_head = nn.Linear(embed_dim, num_classes)
-        self.topo_head = nn.Linear(topo_embed,num_classes)
+        self.topo_head = nn.Linear(embed_dim,num_classes)
 
         self.ce_loss = nn.CrossEntropyLoss()
         
