@@ -30,6 +30,7 @@ from pd_baseline import collate_fn, compute_accuracy
 def load_model(args):
     if args.model_name == 'crossPHG':
         model = CrossPHGNet(
+            alpha=args.alpha,
             embed_dim=768,
             topo_embed = 1024,
             pd_dim = 4,
@@ -49,6 +50,8 @@ def evaluate(args,data_loader, model, device):
 
     epoch_loss = [] 
     epoch_acc = []
+    alpha = model.alpha
+    print('alpha = ',alpha)
     for img, labels, pd, pl in tqdm(data_loader):
         # Input:
         # imge: N x 3 x W x H 
@@ -60,12 +63,12 @@ def evaluate(args,data_loader, model, device):
 
         img_pred,topo_pred = model(img,pd)
         
+
         criterion = torch.nn.CrossEntropyLoss()
         class_label = torch.argmax(labels, dim=1)
-        loss = criterion(img_pred, class_label) + 0.1*criterion(topo_pred,class_label)
-        pred = img_pred + 0.1*topo_pred
-       #acc1 = accuracy(pred, class_label, topk=(1,))[0]
-
+        pred = img_pred + alpha*topo_pred
+        #acc1 = accuracy(pred, class_label, topk=(1,))[0]
+        loss = criterion(pred, class_label)
         acc1 = compute_accuracy(pred,class_label)
 
 
@@ -207,6 +210,8 @@ def main(args):
     eval_acc_record = []
     eval_loss_record = []
 
+    alpha = model.alpha
+    print('Training alpha is ',alpha)
     for epoch in tqdm(range(args.epochs)):
         epoch_loss = [] 
         epoch_acc = []
@@ -226,12 +231,12 @@ def main(args):
 
             criterion = torch.nn.CrossEntropyLoss()
             class_label = torch.argmax(labels, dim=1)
-            loss = criterion(img_pred, class_label) + 0.1*criterion(topo_pred,class_label)
+            
             #acc1 = accuracy(pred, class_label, topk=(1,))[0]
-            pred = img_pred + 0.1*topo_pred
+            pred = img_pred + alpha*topo_pred
             acc1 = compute_accuracy(pred,class_label)
             # Back Prop. #################################################################
-            
+            loss = criterion(pred,class_label)
             loss.backward()
             # gradient clipping
             torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
@@ -315,6 +320,8 @@ if __name__ == "__main__":
     # model
     parser.add_argument('--model_name', default='SwinV2B20', type=str,
                         help='Name of model to train')
+    parser.add_argument('--alpha', default='SwinV2B20', type=str,
+                        help='Name of model to train')
     
     
 
@@ -328,4 +335,4 @@ if __name__ == "__main__":
 # python -m crossPHG_main --batch_size 4 --device cpu --lr 1e-3 --epochs 50 --model_name crossPHG
 
 
-# python -m crossPHG_main --batch_size 64 --device cuda --lr 1e-2 --epochs 50 --model_name crossPHG_topo
+# python -m crossPHG_main --batch_size 64 --device cuda --lr 1e-3 --epochs 50 --model_name crossPHG --remark topoLoss

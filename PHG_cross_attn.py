@@ -174,6 +174,7 @@ class CrossPHGNet(nn.Module):
         embed_dim=768,
         topo_embed = 1024,
         pd_dim = 4,
+        alpha = 0.1,
         num_heads=12,
         img_size = 224,
         norm_layer = nn.LayerNorm,
@@ -185,6 +186,7 @@ class CrossPHGNet(nn.Module):
         super().__init__()
 
         self.device = device
+        self.alpha = alpha
         # Image encoder specifics
         # ViT default patch embeddings
         self.vit = ViT('B_16_imagenet1k', pretrained=True,image_size=img_size).to(self.device) # construct and load 
