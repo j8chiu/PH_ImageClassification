@@ -227,15 +227,15 @@ class CrossPHGNet(nn.Module):
         #print('input shape: ',img.shape)
   
         img = self.vit.patch_embedding(img)
-        out = img.flatten(2).transpose(1, 2) # b,gh*gw,d
+        img_feats = img.flatten(2).transpose(1, 2) # b,gh*gw,d
 
-        out = torch.cat((self.cls_token.expand(N, -1, -1), out), dim=1) # b,num_patches+1,d
+        img_feats = torch.cat((self.cls_token.expand(N, -1, -1), img_feats), dim=1) # b,num_patches+1,d
         #print('patches shape: ',out.shape)
-        out = self.vit.positional_embedding(out)
+        img_feats = self.vit.positional_embedding(img_feats)
 
         pd_feats = self.pd_encoder(pd).unsqueeze(1) # N x 1 x 1024
         
-        
+
         for blk in self.fusion:
             img_feats,pd_feats = blk(img_feats=img_feats,topo_feats=pd_feats,mask=mask)
             
