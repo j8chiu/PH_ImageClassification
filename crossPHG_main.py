@@ -23,7 +23,7 @@ from torch.utils.data.dataloader import DataLoader
 
 # model
 from PHG_cross_attn import CrossPHGNet
-from pd_baseline import collate_fn, compute_accuracy
+from pd_baseline import collate_fn, compute_accuracy,init_weights
 
 
 
@@ -39,6 +39,8 @@ def load_model(args):
             device=args.device,
             depth = 12,
             num_classes = 7,)
+        
+        model.apply(init_weights)
 
     return model
 
