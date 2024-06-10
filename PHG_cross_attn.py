@@ -126,7 +126,7 @@ class CrossAttention(nn.Module):
     
 
 class CrossPHGBlock(nn.Module):
-    def __init__(self, topo_embed=1024,
+    def __init__(self, topo_embed=768,
                  embed_size=768, 
                  num_heads=12, 
                  norm_layer=nn.LayerNorm,
@@ -138,7 +138,7 @@ class CrossPHGBlock(nn.Module):
         self.has_mlp = has_mlp
 
         self.topo_proj = nn.Linear(topo_embed,embed_size)
-        self.invs_topo_proj = nn.Linear(embed_size,topo_embed)
+        #self.invs_topo_proj = nn.Linear(embed_size,topo_embed)
 
         self.norm1 = norm_layer(embed_size)
         self.cross_attn = CrossAttention(dim=embed_size,
@@ -166,7 +166,7 @@ class CrossPHGBlock(nn.Module):
             fusion_cls = img_cls + self.ffn(self.norm2(fusion_cls)) # N x 1 x 768
 
         img_feats = torch.concat((fusion_cls,img_tokens),dim=1)
-        topo_feats = self.invs_topo_proj(topo_feats) # N x 1 x 1024
+        #topo_feats = self.invs_topo_proj(topo_feats) # N x 1 x 1024
 
         return img_feats,topo_feats # N, num_patches, E
 
@@ -199,9 +199,10 @@ class CrossPHGNet(nn.Module):
 
         # PD encoder specifics
         self.pd_encoder = PersistenceDiagramEncoder(input_dim = pd_dim)
+        self.topo_proj = nn.Linear(topo_embed,embed_dim)
 
         self.fusion = nn.ModuleList([
-                CrossPHGBlock(topo_embed=topo_embed,
+                CrossPHGBlock(topo_embed=embed_dim,
                               self_attn_model = self.vit,
                               embed_size=embed_dim, 
                               num_heads=num_heads, 
@@ -234,6 +235,7 @@ class CrossPHGNet(nn.Module):
         img_feats = self.vit.positional_embedding(img_feats)
 
         pd_feats = self.pd_encoder(pd).unsqueeze(1) # N x 1 x 1024
+        pd_feats = self.topo_proj(pd_feats)
         
 
         for blk in self.fusion:
