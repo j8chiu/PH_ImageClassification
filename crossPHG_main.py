@@ -260,7 +260,7 @@ def main(args):
         print(f'Max accuracy: {max_accuracy:.2f}%')
 
         if args.output_dir and (epoch % 10 == 1 or epoch + 1 == args.epochs):
-            check_pt_path = os.path.join(args.output_dir,'crossPHG_ckpt__{}_{}.pth'.format(str(args.epochs),str(epoch)))
+            check_pt_path = os.path.join(args.output_dir,'crossPHG_ckpt__{}_{}.pth'.format(args.remark,str(epoch)))
             to_save = {'model': model.state_dict(),
                         'optimizer': optimizer.state_dict(),
                         'epoch': epoch,
@@ -308,6 +308,8 @@ if __name__ == "__main__":
     # output
     parser.add_argument('--output_dir', default='./results',
                         help='path where to save, empty for no saving')
+    parser.add_argument('--remark', default='remark',
+                        help='Model Remark')
     
     
     # model
@@ -326,4 +328,4 @@ if __name__ == "__main__":
 # python -m crossPHG_main --batch_size 4 --device cpu --lr 1e-3 --epochs 50 --model_name crossPHG
 
 
-# python -m crossPHG_main --batch_size 64 --device cuda --lr 1e-3 --epochs 50 --model_name crossPHG
+# python -m crossPHG_main --batch_size 64 --device cuda --lr 1e-2 --epochs 50 --model_name crossPHG_topo
