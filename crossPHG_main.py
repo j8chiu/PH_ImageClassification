@@ -22,7 +22,7 @@ from dataset.isic_dataset import ISICDataset
 from torch.utils.data.dataloader import DataLoader
 
 # model
-from PHG_cross_attn import CrossPHGNet
+from PHG_cross_attn import CrossPHGNet,AllAttnPHGNet
 from pd_baseline import collate_fn, compute_accuracy,init_weights
 
 
@@ -39,8 +39,11 @@ def load_model(args):
             device=args.device,
             depth = 12,
             num_classes = 7,)
-        
-        model.apply(init_weights)
+    else:
+        model = AllAttnPHGNet(device=args.device,
+                              alpha=args.alpha)
+    
+    model.apply(init_weights)
 
     return model
 
@@ -337,4 +340,4 @@ if __name__ == "__main__":
 # python -m crossPHG_main --batch_size 4 --device cpu --lr 1e-3 --epochs 50 --model_name crossPHG
 
 
-# python -m crossPHG_main --batch_size 64 --device cuda --lr 1e-3 --epochs 50 --model_name crossPHG --alpha 0.1 --remark topoLoss0.1
+# python -m crossPHG_main --batch_size 64 --device cuda --lr 1e-2 --epochs 50 --model_name crossPHG --alpha 0.1 --remark topoLoss0.1

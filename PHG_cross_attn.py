@@ -241,3 +241,83 @@ class CrossPHGNet(nn.Module):
         pd_out = self.topo_head(pd_feats) 
         
         return cls_out,pd_out
+    
+
+##########################################################################################
+##########################################################################################
+##########################################################################################
+class AllAttnPHGNet(nn.Module):
+    def __init__(
+        self,
+        embed_dim=768,
+        topo_embed = 1024,
+        pd_dim = 4,
+        alpha = 0.1,
+        num_heads=12,
+        img_size = 224,
+        norm_layer = nn.LayerNorm,
+        device='cuda',
+        depth = 12,
+        num_classes = 7,
+        has_mlp = True,
+    ):
+        super().__init__()
+
+        self.device = device
+        self.alpha = alpha
+        self.depth = depth
+        # Image encoder specifics
+        # ViT default patch embeddings
+        self.vit = ViT('B_16_imagenet1k', pretrained=True,image_size=img_size).to(self.device) # construct and load 
+        self.vit.fc = None
+        freeze_model(self.vit)
+
+        #self.cls_token = nn.Parameter(torch.zeros(1, 1, embed_dim,dtype=torch.float32))
+
+        # PD encoder specifics
+        self.pd_encoder = PersistenceDiagramEncoder(input_dim = pd_dim)
+        self.pd_proj = nn.Linear(topo_embed,embed_dim)
+
+        self.fusion = nn.ModuleList([
+                CrossPHGBlock(topo_embed=topo_embed,
+                              self_attn_model = self.vit,
+                              embed_size=embed_dim, 
+                              num_heads=num_heads, 
+                              norm_layer=norm_layer,
+                              has_mlp = has_mlp,
+                              curr_layer=curr_layer) for curr_layer in range(depth)])
+
+        
+        #TODO: Head
+        self.cls_head = nn.Linear(embed_dim, num_classes)
+        self.topo_head = nn.Linear(topo_embed,num_classes)
+
+        self.ce_loss = nn.CrossEntropyLoss()
+        
+
+    def forward(self,img,pd,mask=None):
+        '''
+        @param img: (N, 3, 224, 224)
+        @od        
+        '''
+        N,_,H,W = img.shape
+
+        #print('input shape: ',img.shape)
+  
+        img = self.vit.patch_embedding(img)
+        out = img.flatten(2).transpose(1, 2) # b,gh*gw,d
+
+        pd_feats = self.pd_encoder(pd) # N x 1024
+        pd_feats = self.pd_proj(pd_feats).unsqueeze(1) # N,1,768
+    
+        out = torch.cat((pd_feats, out), dim=1) # b,num_patches+1,d
+        #print('patches shape: ',out.shape)
+        out = self.vit.positional_embedding(out)
+        out=self.vit.transformer(out)
+    
+        cls_out = self.cls_head(out[:,0,:]) # N, num_class
+        pd_out = self.topo_head(pd_feats) 
+        
+        return cls_out,pd_out
+    
+
