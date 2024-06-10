@@ -316,7 +316,7 @@ class AllAttnPHGNet(nn.Module):
         out=self.vit.transformer(out)
     
         cls_out = self.cls_head(out[:,0,:]) # N, num_class
-        pd_out = self.topo_head(pd_feats) 
+        pd_out = self.topo_head(pd_feats).squeeze(1) # N, 768
         
         return cls_out,pd_out
     
