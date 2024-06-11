@@ -41,7 +41,9 @@ def load_model(args):
             depth = 12,
             num_classes = 7,)
     elif args.model_name == 'ClsCrossPHG':
-        model = CrossPHGNet(fusion_type = 'cls_only')
+        model = CrossPHGNet(fusion_type = 'cls_only',
+                            alpha = args.alpha,
+                            device=args.device)
     else:
         model = AllAttnPHGNet(device=args.device,
                               alpha=args.alpha,
@@ -348,6 +350,5 @@ if __name__ == "__main__":
 # python -m crossPHG_main --batch_size 64 --device cuda --lr 1e-2 --epochs 50 --model_name attnPHG --alpha 0.1 --remark allAttn0.1
 # python -m crossPHG_main --batch_size 64 --device cuda --lr 5e-3 --epochs 50 --model_name crossPHG --alpha 0 --remark topoloss0
 
-# python -m crossPHG_main --batch_size 64 --device cuda --lr 1e-3 --epochs 50 --model_name ClsCrossPHG --alpha 0.1 --remark topoloss0.1
-
+# python -m crossPHG_main --batch_size 64 --device cuda --lr 1e-3 --epochs 50 --model_name ClsCrossPHG --alpha 0 --remark topoloss0.0
 
