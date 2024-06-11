@@ -394,15 +394,8 @@ class ClsFusionBlock(nn.Module):
             img_cls = img_feats[:,0:1,:]
 
             #tmp = torch.concat((topo_feats,img_tokens),dim=1) # N， num_patches + 1, 768
-            tmp = torch.concat((img_tokens,topo_tokens),dim=1) # N, 2, 768
-            fusion_cls = self.cross_attn(tmp) # N x 1 x 768
-            
-            if self.has_mlp:
-                fusion_cls = img_cls + self.ffn(self.norm2(fusion_cls)) # N x 1 x 768
-
+            fusion_cls = img_tokens + topo_tokens
             img_feats = torch.concat((fusion_cls,img_tokens),dim=1)
-        else:
-            img_feats = img_feats + self.ffn(self.norm2(img_feats))
-
+            
         return img_feats # N, num_patches+1, E
     
