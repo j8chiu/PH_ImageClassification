@@ -369,15 +369,9 @@ class ClsFusionBlock(nn.Module):
 
         self.topo_proj = nn.Linear(topo_embed,embed_size)
         self.norm1 = norm_layer(embed_size)
-        self.cross_attn = CrossAttention(dim=embed_size,
-                              num_heads=num_heads, 
-                              proj_drop=0.1)
         
         self.self_attn = self_attn_model.transformer.blocks[curr_layer].eval()
         self.norm2 = norm_layer(embed_size)
-
-        if self.has_mlp:
-            self.ffn = FeedForward(emb_size=embed_size,hidden_size=embed_size*4)
 
         self.fuse_freq = fuse_freq
         self.curr_layer = curr_layer
@@ -396,6 +390,6 @@ class ClsFusionBlock(nn.Module):
             #tmp = torch.concat((topo_feats,img_tokens),dim=1) # N， num_patches + 1, 768
             fusion_cls = img_tokens + topo_tokens
             img_feats = torch.concat((fusion_cls,img_tokens),dim=1)
-            
+
         return img_feats # N, num_patches+1, E
     
