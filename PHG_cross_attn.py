@@ -388,7 +388,7 @@ class ClsFusionBlock(nn.Module):
             img_cls = img_feats[:,0:1,:]
 
             #tmp = torch.concat((topo_feats,img_tokens),dim=1) # N， num_patches + 1, 768
-            fusion_cls = img_tokens + topo_tokens
+            fusion_cls = img_cls + topo_tokens
             img_feats = torch.concat((fusion_cls,img_tokens),dim=1)
 
         return img_feats # N, num_patches+1, E
