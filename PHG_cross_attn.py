@@ -177,6 +177,7 @@ class CrossPHGNet(nn.Module):
         alpha = 0.1,
         num_heads=12,
         img_size = 224,
+        fusion_type = 'cross_attn',
         norm_layer = nn.LayerNorm,
         device='cuda',
         depth = 12,
@@ -198,14 +199,24 @@ class CrossPHGNet(nn.Module):
         # PD encoder specifics
         self.pd_encoder = PersistenceDiagramEncoder(input_dim = pd_dim)
 
-        self.fusion = nn.ModuleList([
-                CrossPHGBlock(topo_embed=topo_embed,
+        if fusion_type == 'cls_only':
+            self.fusion = nn.ModuleList([
+                ClsFusionBlock(topo_embed=topo_embed,
                               self_attn_model = self.vit,
                               embed_size=embed_dim, 
                               num_heads=num_heads, 
                               norm_layer=norm_layer,
                               has_mlp = has_mlp,
                               curr_layer=curr_layer) for curr_layer in range(depth)])
+        else:
+            self.fusion = nn.ModuleList([
+                    CrossPHGBlock(topo_embed=topo_embed,
+                                self_attn_model = self.vit,
+                                embed_size=embed_dim, 
+                                num_heads=num_heads, 
+                                norm_layer=norm_layer,
+                                has_mlp = has_mlp,
+                                curr_layer=curr_layer) for curr_layer in range(depth)])
 
         
         #TODO: Head
@@ -257,7 +268,7 @@ class AllAttnPHGNet(nn.Module):
         img_size = 224,
         norm_layer = nn.LayerNorm,
         device='cuda',
-        fusion_type = 'cls_only',
+        fusion_type = 'cross_attn',
         depth = 12,
         num_classes = 7,
         has_mlp = True,
