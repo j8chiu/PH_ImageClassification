@@ -13,14 +13,14 @@ kubectl get nodes -L nvidia.com/gpu.product
 kubectl exec -it test-pod -- /bin/bash
 kubectl exec -it physio-model-5bf5bddbf6-cgv7m -- /bin/bash
 
-kubectl exec -it physio-model-l-58f79fd5f6-8h57s  -- /bin/bash
+kubectl exec -it physio-model-l-58f79fd5f6-xjlbn  -- /bin/bash
 # delete
 kubectl delete pod test-pod
 # upload file
 kubectl cp data/splits_5fold test-pod:IDH-task/data/splits_5fold -c gpu-container
 
 kubectl cp data/pretrain physio-model-l-f55f79c47-d2khh:/HGB/data/pretrain -c physio-model-l
-kubectl cp data/raw_data physio-model-l-58f79fd5f6-8h57s:PH_ImageClassification/data/raw_data -c physio-model-l
+kubectl cp data/raw_data physio-model-l-58f79fd5f6-xjlbn:PH_ImageClassification/data/raw_data -c physio-model-l
 
 kubectl cp nlp_supervise/sensor_embed.pkl physio-model-l-f55f79c47-q556k:data/sensor_embed.pkl -c physio-model-l
 

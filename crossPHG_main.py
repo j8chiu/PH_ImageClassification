@@ -35,6 +35,7 @@ def load_model(args):
             topo_embed = 1024,
             pd_dim = 4,
             num_heads=12,
+            fuse_freq=args.fuse_freq,
             fusion_type = 'cross_attn',
             norm_layer = nn.LayerNorm,
             device=args.device,
@@ -43,7 +44,8 @@ def load_model(args):
     elif args.model_name == 'ClsCrossPHG':
         model = CrossPHGNet(fusion_type = 'cls_only',
                             alpha = args.alpha,
-                            device=args.device)
+                            device=args.device,
+                            fuse_freq=args.fuse_freq)
     else:
         model = AllAttnPHGNet(device=args.device,
                               alpha=args.alpha,
@@ -333,6 +335,8 @@ if __name__ == "__main__":
                         help='Name of model to train')
     parser.add_argument('--alpha', default=0.1, type=float,
                         help='alpha (control topo feats)')
+    parser.add_argument('--fuse_freq', default=1, type=int,
+                        help='fuse frequency, default fuse in every layer')
     
     
 
@@ -350,5 +354,7 @@ if __name__ == "__main__":
 # python -m crossPHG_main --batch_size 64 --device cuda --lr 1e-2 --epochs 50 --model_name attnPHG --alpha 0.1 --remark allAttn0.1
 # python -m crossPHG_main --batch_size 64 --device cuda --lr 5e-3 --epochs 50 --model_name crossPHG --alpha 0 --remark topoloss0
 
-# python -m crossPHG_main --batch_size 64 --device cuda --lr 1e-3 --epochs 50 --model_name ClsCrossPHG --alpha 0 --remark topoloss0.0
+# python -m crossPHG_main --batch_size 64 --device cuda --lr 1e-2 --epochs 50 --model_name ClsCrossPHG --alpha 0.1 --remark topoloss0.1_2
 
+
+# python -m crossPHG_main --batch_size 64 --device cuda --lr 1e-2 --epochs 150 --model_name crossPHG --alpha 0.1 --remark topoloss100_2

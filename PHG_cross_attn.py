@@ -131,6 +131,7 @@ class CrossPHGBlock(nn.Module):
                  num_heads=12, 
                  norm_layer=nn.LayerNorm,
                  self_attn_model=None,
+                 fuse_freq = 1,
                  has_mlp = True,
                  curr_layer=0):
         super().__init__()
@@ -142,7 +143,8 @@ class CrossPHGBlock(nn.Module):
         self.cross_attn = CrossAttention(dim=embed_size,
                               num_heads=num_heads, 
                               proj_drop=0.1)
-        
+        self.curr_layer = curr_layer
+        self.fuse_freq = fuse_freq
         self.self_attn = self_attn_model.transformer.blocks[curr_layer].eval()
         self.norm2 = norm_layer(embed_size)
 
@@ -152,21 +154,22 @@ class CrossPHGBlock(nn.Module):
     def forward(self,img_feats,topo_feats,mask=None):
         # self_attention
         img_feats = self.self_attn(self.norm1(img_feats),mask=mask) # N， num_patches + 1, 768
-        topo_feats = self.topo_proj(topo_feats) # N, 768
-
-        topo_feats = topo_feats.unsqueeze(1) # N,1,768
-        img_tokens = img_feats[:,1:,:] # N, num_patches, 768
-        img_cls = img_feats[:,0:1,:]
-
-        tmp = torch.concat((topo_feats,img_tokens),dim=1) # N， num_patches + 1, 768
-        fusion_cls = self.cross_attn(tmp) # N x 1 x 768
         
-        if self.has_mlp:
+        if (self.curr_layer+1) % self.fuse_freq == 0:
+            topo_feats = self.topo_proj(topo_feats) # N, 768
+            topo_feats = topo_feats.unsqueeze(1) # N,1,768
+            img_tokens = img_feats[:,1:,:] # N, num_patches, 768
+            img_cls = img_feats[:,0:1,:]
+        
+            tmp = torch.concat((topo_feats,img_tokens),dim=1) # N， num_patches + 1, 768
+            fusion_cls = self.cross_attn(tmp) # N x 1 x 768
             fusion_cls = img_cls + self.ffn(self.norm2(fusion_cls)) # N x 1 x 768
+            img_feats = torch.concat((fusion_cls,img_tokens),dim=1)
 
-        img_feats = torch.concat((fusion_cls,img_tokens),dim=1)
+        else:
+            img_feats = img_feats + self.ffn(self.norm2(img_feats))
 
-        return img_feats # N, num_patches, E
+        return img_feats # N, num_patches+1, E
 
 class CrossPHGNet(nn.Module):
     def __init__(
@@ -178,6 +181,7 @@ class CrossPHGNet(nn.Module):
         num_heads=12,
         img_size = 224,
         fusion_type = 'cross_attn',
+        fuse_freq = 1,
         norm_layer = nn.LayerNorm,
         device='cuda',
         depth = 12,
@@ -207,6 +211,7 @@ class CrossPHGNet(nn.Module):
                               num_heads=num_heads, 
                               norm_layer=norm_layer,
                               has_mlp = has_mlp,
+                              fuse_freq = fuse_freq,
                               curr_layer=curr_layer) for curr_layer in range(depth)])
         else:
             self.fusion = nn.ModuleList([
@@ -215,6 +220,7 @@ class CrossPHGNet(nn.Module):
                                 embed_size=embed_dim, 
                                 num_heads=num_heads, 
                                 norm_layer=norm_layer,
+                                fuse_freq = fuse_freq,
                                 has_mlp = has_mlp,
                                 curr_layer=curr_layer) for curr_layer in range(depth)])
 
@@ -355,7 +361,8 @@ class ClsFusionBlock(nn.Module):
                  norm_layer=nn.LayerNorm,
                  self_attn_model=None,
                  has_mlp = True,
-                 curr_layer=0):
+                 curr_layer=0,
+                 fuse_freq = 1,):
         super().__init__()
 
         self.has_mlp = has_mlp
@@ -372,23 +379,30 @@ class ClsFusionBlock(nn.Module):
         if self.has_mlp:
             self.ffn = FeedForward(emb_size=embed_size,hidden_size=embed_size*4)
 
+        self.fuse_freq = fuse_freq
+        self.curr_layer = curr_layer
+        
     def forward(self,img_feats,topo_feats,mask=None):
         # self_attention
         img_feats = self.self_attn(self.norm1(img_feats),mask=mask) # N， num_patches + 1, 768
-        topo_feats = self.topo_proj(topo_feats) # N, 768
-
-        topo_tokens = topo_feats.unsqueeze(1) # N,1,768
-        img_tokens = img_feats[:,1:,:] # N, num_patches, 768
-        img_cls = img_feats[:,0:1,:]
-
-        #tmp = torch.concat((topo_feats,img_tokens),dim=1) # N， num_patches + 1, 768
-        tmp = torch.concat((img_tokens,topo_tokens),dim=1) # N, 2, 768
-        fusion_cls = self.cross_attn(tmp) # N x 1 x 768
         
-        if self.has_mlp:
-            fusion_cls = img_cls + self.ffn(self.norm2(fusion_cls)) # N x 1 x 768
+        if self.curr_layer+1%self.fuse_freq == 0:
+            topo_feats = self.topo_proj(topo_feats) # N, 768
 
-        img_feats = torch.concat((fusion_cls,img_tokens),dim=1)
+            topo_tokens = topo_feats.unsqueeze(1) # N,1,768
+            img_tokens = img_feats[:,1:,:] # N, num_patches, 768
+            img_cls = img_feats[:,0:1,:]
 
-        return img_feats # N, num_patches, E
+            #tmp = torch.concat((topo_feats,img_tokens),dim=1) # N， num_patches + 1, 768
+            tmp = torch.concat((img_tokens,topo_tokens),dim=1) # N, 2, 768
+            fusion_cls = self.cross_attn(tmp) # N x 1 x 768
+            
+            if self.has_mlp:
+                fusion_cls = img_cls + self.ffn(self.norm2(fusion_cls)) # N x 1 x 768
+
+            img_feats = torch.concat((fusion_cls,img_tokens),dim=1)
+        else:
+            img_feats = img_feats + self.ffn(self.norm2(img_feats))
+
+        return img_feats # N, num_patches+1, E
     
