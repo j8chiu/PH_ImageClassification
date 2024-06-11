@@ -35,13 +35,17 @@ def load_model(args):
             topo_embed = 1024,
             pd_dim = 4,
             num_heads=12,
+            fusion_type = 'cross_attn',
             norm_layer = nn.LayerNorm,
             device=args.device,
             depth = 12,
             num_classes = 7,)
+    elif args.model_name == 'ClsCrossPHG':
+        model = CrossPHGNet(fusion_type = 'cls_only')
     else:
         model = AllAttnPHGNet(device=args.device,
-                              alpha=args.alpha)
+                              alpha=args.alpha,
+                              fusion_type = 'cross_attn')
     
     model.apply(init_weights)
 
@@ -342,3 +346,4 @@ if __name__ == "__main__":
 
 # python -m crossPHG_main --batch_size 64 --device cuda --lr 1e-2 --epochs 50 --model_name crossPHG --alpha 0.1 --remark topoLoss0.1
 # python -m crossPHG_main --batch_size 64 --device cuda --lr 1e-2 --epochs 50 --model_name attnPHG --alpha 0.1 --remark allAttn0.1
+# python -m crossPHG_main --batch_size 64 --device cuda --lr 5e-3 --epochs 50 --model_name crossPHG --alpha 0 --remark topoloss0

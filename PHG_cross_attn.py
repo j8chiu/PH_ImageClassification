@@ -257,6 +257,7 @@ class AllAttnPHGNet(nn.Module):
         img_size = 224,
         norm_layer = nn.LayerNorm,
         device='cuda',
+        fusion_type = 'cls_only',
         depth = 12,
         num_classes = 7,
         has_mlp = True,
@@ -277,15 +278,25 @@ class AllAttnPHGNet(nn.Module):
         # PD encoder specifics
         self.pd_encoder = PersistenceDiagramEncoder(input_dim = pd_dim)
         self.pd_proj = nn.Linear(topo_embed,embed_dim)
-
-        self.fusion = nn.ModuleList([
-                CrossPHGBlock(topo_embed=topo_embed,
+        
+        if fusion_type == 'cls_only':
+            self.fusion = nn.ModuleList([
+                ClsFusionBlock(topo_embed=topo_embed,
                               self_attn_model = self.vit,
                               embed_size=embed_dim, 
                               num_heads=num_heads, 
                               norm_layer=norm_layer,
                               has_mlp = has_mlp,
                               curr_layer=curr_layer) for curr_layer in range(depth)])
+        else:
+            self.fusion = nn.ModuleList([
+                    CrossPHGBlock(topo_embed=topo_embed,
+                                self_attn_model = self.vit,
+                                embed_size=embed_dim, 
+                                num_heads=num_heads, 
+                                norm_layer=norm_layer,
+                                has_mlp = has_mlp,
+                                curr_layer=curr_layer) for curr_layer in range(depth)])
 
         
         #TODO: Head
@@ -321,3 +332,52 @@ class AllAttnPHGNet(nn.Module):
         return cls_out,pd_out
     
 
+
+##########################################################################################
+##########################################################################################
+##########################################################################################
+    
+class ClsFusionBlock(nn.Module):
+    def __init__(self, topo_embed=1024,
+                 embed_size=768, 
+                 num_heads=12, 
+                 norm_layer=nn.LayerNorm,
+                 self_attn_model=None,
+                 has_mlp = True,
+                 curr_layer=0):
+        super().__init__()
+
+        self.has_mlp = has_mlp
+
+        self.topo_proj = nn.Linear(topo_embed,embed_size)
+        self.norm1 = norm_layer(embed_size)
+        self.cross_attn = CrossAttention(dim=embed_size,
+                              num_heads=num_heads, 
+                              proj_drop=0.1)
+        
+        self.self_attn = self_attn_model.transformer.blocks[curr_layer].eval()
+        self.norm2 = norm_layer(embed_size)
+
+        if self.has_mlp:
+            self.ffn = FeedForward(emb_size=embed_size,hidden_size=embed_size*4)
+
+    def forward(self,img_feats,topo_feats,mask=None):
+        # self_attention
+        img_feats = self.self_attn(self.norm1(img_feats),mask=mask) # N， num_patches + 1, 768
+        topo_feats = self.topo_proj(topo_feats) # N, 768
+
+        topo_tokens = topo_feats.unsqueeze(1) # N,1,768
+        img_tokens = img_feats[:,1:,:] # N, num_patches, 768
+        img_cls = img_feats[:,0:1,:]
+
+        #tmp = torch.concat((topo_feats,img_tokens),dim=1) # N， num_patches + 1, 768
+        tmp = torch.concat((img_tokens,topo_tokens),dim=1) # N, 2, 768
+        fusion_cls = self.cross_attn(tmp) # N x 1 x 768
+        
+        if self.has_mlp:
+            fusion_cls = img_cls + self.ffn(self.norm2(fusion_cls)) # N x 1 x 768
+
+        img_feats = torch.concat((fusion_cls,img_tokens),dim=1)
+
+        return img_feats # N, num_patches, E
+    
