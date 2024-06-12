@@ -25,7 +25,8 @@ from torch.utils.data.dataloader import DataLoader
 from PHG_cross_attn import CrossPHGNet,AllAttnPHGNet
 from pd_baseline import collate_fn, compute_accuracy,init_weights
 
-
+if torch.cuda.is_available():
+    torch.cuda.manual_seed_all(42)
 
 def load_model(args):
     if args.model_name == 'crossPHG':
@@ -367,7 +368,7 @@ if __name__ == "__main__":
 
 # python -m crossPHG_main --batch_size 64 --device cuda --lr 5e-3 --epochs 50 --model_name crossPHG --fuse_freq 1 --alpha 0.2 --remark topoloss50_a0.2f1 
 
-# python -m crossPHG_main --batch_size 64 --device cuda --lr 1e-2 --epochs 50 --model_name VitTCross --alpha 0.6 --remark a0.6
+# python -m crossPHG_main --batch_size 64 --device cuda --lr 1e-2 --epochs 50 --model_name VitTCross --alpha 0 --remark a0
 
 
 
