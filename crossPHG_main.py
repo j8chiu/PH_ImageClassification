@@ -46,6 +46,11 @@ def load_model(args):
                             alpha = args.alpha,
                             device=args.device,
                             fuse_freq=args.fuse_freq)
+    elif args.model_name == 'VitTCross':
+        model = CrossPHGNet(fusion_type = 'VitTCross',
+                            alpha = args.alpha,
+                            device=args.device,
+                            fuse_freq=args.fuse_freq)
     else:
         model = AllAttnPHGNet(device=args.device,
                               alpha=args.alpha,
@@ -216,7 +221,7 @@ def main(args):
     print(f"Start training for {args.epochs} epochs")
     for arg, value in vars(args).items():
         print(f"{arg}: {value}")
-        
+
     start_time = time.time()
     max_accuracy = 0.0
 
