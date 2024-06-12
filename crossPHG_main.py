@@ -214,6 +214,9 @@ def main(args):
     print(optimizer)
 
     print(f"Start training for {args.epochs} epochs")
+    for arg, value in vars(args).items():
+        print(f"{arg}: {value}")
+        
     start_time = time.time()
     max_accuracy = 0.0
 
@@ -351,7 +354,7 @@ if __name__ == "__main__":
 
 
 # python -m crossPHG_main --batch_size 64 --device cuda --lr 1e-2 --epochs 50 --model_name crossPHG --alpha 0.1 --remark topoLoss0.1
-# python -m crossPHG_main --batch_size 64 --device cuda --lr 1e-2 --epochs 50 --model_name attnPHG --alpha 0.1 --remark allAttn0.1
+# python -m crossPHG_main --batch_size 64 --device cuda --lr 1e-2 --epochs 50 --model_name crossPHG --alpha 0.1 --remark topo0.1
 # python -m crossPHG_main --batch_size 64 --device cuda --lr 1e-3 --epochs 50 --model_name crossPHG --alpha 0 --remark topoloss0
 
 # python -m crossPHG_main --batch_size 64 --device cuda --lr 1e-2 --epochs 50 --model_name ClsCrossPHG --alpha 0.1 --remark topoloss0.1_2

@@ -161,7 +161,7 @@ class CrossPHGBlock(nn.Module):
             #img_tokens = img_feats[:,1:,:] # N, num_patches, 768
         
             fusion_feats = self.cross_attn(q=img_feats,kv=topo_feats) # N x num_patches+1 x 768
-            img_feats = img_feats + self.ffn(self.norm2(fusion_feats)) # N x 1 x 768
+            img_feats = img_feats + self.ffn(self.norm2(fusion_feats)) # N x num_patches+1 x 768
                 
         else:
             img_feats = img_feats + self.ffn(self.norm2(img_feats))
