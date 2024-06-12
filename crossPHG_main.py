@@ -286,7 +286,7 @@ def main(args):
         print(f'Max accuracy: {max_accuracy:.2f}%')
 
         if args.output_dir and (epoch % 10 == 1 or epoch + 1 == args.epochs):
-            check_pt_path = os.path.join(args.output_dir,'crossPHG_ckpt__{}_{}.pth'.format(args.remark,str(epoch)))
+            check_pt_path = os.path.join(args.output_dir,'{}_{}_{}.pth'.format(args.model_name,args.remark,str(epoch)))
             to_save = {'model': model.state_dict(),
                         'optimizer': optimizer.state_dict(),
                         'epoch': epoch,
@@ -366,3 +366,9 @@ if __name__ == "__main__":
 
 
 # python -m crossPHG_main --batch_size 64 --device cuda --lr 5e-3 --epochs 50 --model_name crossPHG --fuse_freq 1 --alpha 0.2 --remark topoloss50_a0.2f1 
+
+# python -m crossPHG_main --batch_size 64 --device cuda --lr 1e-2 --epochs 50 --model_name VitTCross --alpha 0 --remark a0
+
+
+
+

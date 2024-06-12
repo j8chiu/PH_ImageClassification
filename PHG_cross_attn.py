@@ -212,7 +212,7 @@ class CrossPHGNet(nn.Module):
                               fuse_freq = fuse_freq,
                               curr_layer=curr_layer) for curr_layer in range(depth)])
         elif fusion_type == 'VitTCross':
-            nn.ModuleList([
+            self.fusion = nn.ModuleList([
                 VitTCrossBlock(topo_embed=topo_embed,
                               self_attn_model = self.vit,
                               embed_size=embed_dim, 
