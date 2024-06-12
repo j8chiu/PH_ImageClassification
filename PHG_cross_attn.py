@@ -62,7 +62,8 @@ class CrossAttention(nn.Module):
         self.proj_drop = nn.Dropout(proj_drop)
 
     def forward(self,q,kv,mask=None): 
-        B, N, C = q.shape #bs, num_patches+1, E, 
+        B, N, C = q.shape #bs, num_patches+1, E,
+         
         q = self.wq(q).reshape(B, N, self.num_heads, C // self.num_heads).permute(0, 2, 1, 3)  # BNC -> BNH(C/H) -> BHN(C/H)
 
         k = self.wk(kv).reshape(B, 1, self.num_heads, C // self.num_heads).permute(0, 2, 1, 3)  # B1C -> B1H(C/H) -> BH1(C/H)
@@ -125,7 +126,7 @@ class CrossAttention(nn.Module):
 #         return x # N x 1 x 768
     
 
-class CrossPHGBlock(nn.Module):
+class CrossAttnBlock(nn.Module):
     def __init__(self, topo_embed=1024,
                  embed_size=768, 
                  num_heads=12, 
@@ -212,7 +213,7 @@ class CrossPHGNet(nn.Module):
                               curr_layer=curr_layer) for curr_layer in range(depth)])
         else:
             self.fusion = nn.ModuleList([
-                    CrossPHGBlock(topo_embed=topo_embed,
+                    CrossAttnBlock(topo_embed=topo_embed,
                                 self_attn_model = self.vit,
                                 embed_size=embed_dim, 
                                 num_heads=num_heads, 
@@ -304,7 +305,7 @@ class AllAttnPHGNet(nn.Module):
                               curr_layer=curr_layer) for curr_layer in range(depth)])
         else:
             self.fusion = nn.ModuleList([
-                    CrossPHGBlock(topo_embed=topo_embed,
+                    CrossAttnBlock(topo_embed=topo_embed,
                                 self_attn_model = self.vit,
                                 embed_size=embed_dim, 
                                 num_heads=num_heads, 
@@ -390,3 +391,54 @@ class ClsFusionBlock(nn.Module):
 
         return img_feats # N, num_patches+1, E
     
+
+##########################################################################################
+##########################################################################################
+##########################################################################################
+
+class VitTCrossBlock(nn.Module):
+    def __init__(self, topo_embed=1024,
+                 embed_size=768, 
+                 num_heads=12, 
+                 norm_layer=nn.LayerNorm,
+                 self_attn_model=None,
+                 fuse_freq = 1,
+                 has_mlp = True,
+                 curr_layer=0):
+        super().__init__()
+
+        self.has_mlp = has_mlp
+
+        self.topo_proj = nn.Linear(topo_embed,embed_size)
+        self.norm1 = norm_layer(embed_size)
+        self.cross_attn = CrossAttention(dim=embed_size,
+                              num_heads=num_heads, 
+                              proj_drop=0.1)
+        self.curr_layer = curr_layer
+        self.fuse_freq = fuse_freq
+        self.self_attn = self_attn_model.transformer.blocks[curr_layer].eval()
+        self.norm2 = norm_layer(embed_size)
+
+        if self.has_mlp:
+            self.ffn = FeedForward(emb_size=embed_size,hidden_size=embed_size*4)
+
+    def forward(self,img_feats,topo_feats,mask=None):
+        # self_attention
+        img_feats = self.self_attn(self.norm1(img_feats),mask=mask) # N， num_patches + 1, 768
+        
+        if (self.curr_layer+1) % self.fuse_freq == 0:
+            topo_feats = self.topo_proj(topo_feats) # N, 768
+            topo_feats = topo_feats.unsqueeze(1) # N,1,768 #kv
+            img_tokens = img_feats[:,1:,:] # N, num_patches, 768
+            #img_cls = img_feats[:,0:1,:]
+
+            tmp = torch.cat((topo_feats,img_tokens),dim=1) # q
+            
+        
+            fusion_feats = self.cross_attn(q=tmp,kv=topo_feats) # N x num_patches+1 x 768
+            img_feats = img_feats + self.ffn(self.norm2(fusion_feats)) # N x num_patches+1 x 768
+                
+        else:
+            img_feats = img_feats + self.ffn(self.norm2(img_feats))
+
+        return img_feats # N, num_patches+1, E
