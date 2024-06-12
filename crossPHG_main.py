@@ -48,6 +48,7 @@ def load_model(args):
                             device=args.device,
                             fuse_freq=args.fuse_freq)
     elif args.model_name == 'VitTCross':
+        print('Training Fusion type of VitTCross')
         model = CrossPHGNet(fusion_type = 'VitTCross',
                             alpha = args.alpha,
                             device=args.device,
@@ -368,8 +369,6 @@ if __name__ == "__main__":
 
 # python -m crossPHG_main --batch_size 64 --device cuda --lr 5e-3 --epochs 50 --model_name crossPHG --fuse_freq 1 --alpha 0.2 --remark topoloss50_a0.2f1 
 
-# python -m crossPHG_main --batch_size 64 --device cuda --lr 1e-2 --epochs 50 --model_name VitTCross --alpha 0 --remark a0
-
-
+# python -m crossPHG_main --batch_size 64 --device cuda --lr 1e-3 --epochs 100 --model_name VitTCross --alpha 0 --remark a0
 
 
