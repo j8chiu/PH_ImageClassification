@@ -40,57 +40,14 @@ class FeedForward(nn.Module):
         return out
 
 
-# class CrossAttention(nn.Module):
-#     def __init__(self, dim=768, num_heads=8, 
-#                  qkv_bias=False, 
-#                  qk_scale=None, 
-#                  attn_drop=0.,
-#                  proj_drop=0.):
-#         super().__init__()
-#         # cross attention of (q: cls token and kv: whole sequence)
-
-#         self.num_heads = num_heads
-#         head_dim = dim // num_heads
-        
-#         self.scale = qk_scale or head_dim ** -0.5
-
-#         self.wq = nn.Linear(dim, dim, bias=qkv_bias)
-#         self.wk = nn.Linear(dim, dim, bias=qkv_bias)
-#         self.wv = nn.Linear(dim, dim, bias=qkv_bias)
-#         self.attn_drop = nn.Dropout(attn_drop)
-#         self.proj = nn.Linear(dim, dim)
-#         self.proj_drop = nn.Dropout(proj_drop)
-
-#     def forward(self,q,kv,mask=None): 
-#         B, N, C = q.shape #bs, num_patches+1, E, 
-#         q = self.wq(q).reshape(B, N, self.num_heads, C // self.num_heads).permute(0, 2, 1, 3)  # BNC -> BNH(C/H) -> BHN(C/H)
-
-#         k = self.wk(kv).reshape(B, 1, self.num_heads, C // self.num_heads).permute(0, 2, 1, 3)  # B1C -> B1H(C/H) -> BH1(C/H)
-#         v = self.wv(kv).reshape(B, 1, self.num_heads, C // self.num_heads).permute(0, 2, 1, 3)  # B1C -> B1H(C/H) -> BH1(C/H)
-
-#         attn = (q @ k.transpose(-2, -1)) * self.scale  # BHN(C/H) @ BH1(C/H) -> BHN1
-#         #print('attn shape',attn.shape)
-
-#         if mask is not None:
-#             mask = mask[:,None,None,:]
-#             attn -= 1000.0*(1.0-mask)
-#         attn = attn.softmax(dim=-1)
-#         attn = self.attn_drop(attn)
-
-#         x = (attn @ v).transpose(1, 2).reshape(B, N, C)   # (BHN1 @ BH1(C/H)) -> BHN(C/H) -> BNH(C/H) -> BNC
-#         x = self.proj(x)
-#         x = self.proj_drop(x)
-
-#         return x # batch_size, num_patches, 768
-
-
-
 class CrossAttention(nn.Module):
-    def __init__(self, dim, num_heads=8, qkv_bias=False, 
-                 qk_scale=None, attn_drop=0.,
+    def __init__(self, dim=768, num_heads=8, 
+                 qkv_bias=False, 
+                 qk_scale=None, 
+                 attn_drop=0.,
                  proj_drop=0.):
         super().__init__()
-        # cross attention of q: cls token and kv: whole sequence
+        # cross attention of (q: cls token and kv: whole sequence)
 
         self.num_heads = num_heads
         head_dim = dim // num_heads
@@ -104,25 +61,68 @@ class CrossAttention(nn.Module):
         self.proj = nn.Linear(dim, dim)
         self.proj_drop = nn.Dropout(proj_drop)
 
-    def forward(self, x, mask=None): 
-        # x = (pd token, image tokens)
-        B, N, C = x.shape #bs, num_patches+1, E, 
-        q = self.wq(x[:, 0:1, ...]).reshape(B, 1, self.num_heads, C // self.num_heads).permute(0, 2, 1, 3)  # B1C -> B1H(C/H) -> BH1(C/H)
-        k = self.wk(x).reshape(B, N, self.num_heads, C // self.num_heads).permute(0, 2, 1, 3)  # BNC -> BNH(C/H) -> BHN(C/H)
-        v = self.wv(x).reshape(B, N, self.num_heads, C // self.num_heads).permute(0, 2, 1, 3)  # BNC -> BNH(C/H) -> BHN(C/H)
+    def forward(self,q,kv,mask=None): 
+        B, N, C = q.shape #bs, num_patches+1, E, 
+        q = self.wq(q).reshape(B, N, self.num_heads, C // self.num_heads).permute(0, 2, 1, 3)  # BNC -> BNH(C/H) -> BHN(C/H)
 
-        attn = (q @ k.transpose(-2, -1)) * self.scale  # BH1(C/H) @ BH(C/H)N -> BH1N
+        k = self.wk(kv).reshape(B, 1, self.num_heads, C // self.num_heads).permute(0, 2, 1, 3)  # B1C -> B1H(C/H) -> BH1(C/H)
+        v = self.wv(kv).reshape(B, 1, self.num_heads, C // self.num_heads).permute(0, 2, 1, 3)  # B1C -> B1H(C/H) -> BH1(C/H)
+
+        attn = (q @ k.transpose(-2, -1)) * self.scale  # BHN(C/H) @ BH1(C/H) -> BHN1
+        #print('attn shape',attn.shape)
+
         if mask is not None:
             mask = mask[:,None,None,:]
             attn -= 1000.0*(1.0-mask)
         attn = attn.softmax(dim=-1)
         attn = self.attn_drop(attn)
 
-        x = (attn @ v).transpose(1, 2).reshape(B, 1, C)   # (BH1N @ BHN(C/H)) -> BH1(C/H) -> B1H(C/H) -> B1C
+        x = (attn @ v).transpose(1, 2).reshape(B, N, C)   # (BHN1 @ BH1(C/H)) -> BHN(C/H) -> BNH(C/H) -> BNC
         x = self.proj(x)
         x = self.proj_drop(x)
 
-        return x # N x 1 x 768
+        return x # batch_size, num_patches, 768
+
+
+
+# class CrossAttention(nn.Module):
+#     def __init__(self, dim, num_heads=8, qkv_bias=False, 
+#                  qk_scale=None, attn_drop=0.,
+#                  proj_drop=0.):
+#         super().__init__()
+#         # cross attention of q: cls token and kv: whole sequence
+
+#         self.num_heads = num_heads
+#         head_dim = dim // num_heads
+        
+#         self.scale = qk_scale or head_dim ** -0.5
+
+#         self.wq = nn.Linear(dim, dim, bias=qkv_bias)
+#         self.wk = nn.Linear(dim, dim, bias=qkv_bias)
+#         self.wv = nn.Linear(dim, dim, bias=qkv_bias)
+#         self.attn_drop = nn.Dropout(attn_drop)
+#         self.proj = nn.Linear(dim, dim)
+#         self.proj_drop = nn.Dropout(proj_drop)
+
+#     def forward(self, x, mask=None): 
+#         # x = (pd token, image tokens)
+#         B, N, C = x.shape #bs, num_patches+1, E, 
+#         q = self.wq(x[:, 0:1, ...]).reshape(B, 1, self.num_heads, C // self.num_heads).permute(0, 2, 1, 3)  # B1C -> B1H(C/H) -> BH1(C/H)
+#         k = self.wk(x).reshape(B, N, self.num_heads, C // self.num_heads).permute(0, 2, 1, 3)  # BNC -> BNH(C/H) -> BHN(C/H)
+#         v = self.wv(x).reshape(B, N, self.num_heads, C // self.num_heads).permute(0, 2, 1, 3)  # BNC -> BNH(C/H) -> BHN(C/H)
+
+#         attn = (q @ k.transpose(-2, -1)) * self.scale  # BH1(C/H) @ BH(C/H)N -> BH1N
+#         if mask is not None:
+#             mask = mask[:,None,None,:]
+#             attn -= 1000.0*(1.0-mask)
+#         attn = attn.softmax(dim=-1)
+#         attn = self.attn_drop(attn)
+
+#         x = (attn @ v).transpose(1, 2).reshape(B, 1, C)   # (BH1N @ BHN(C/H)) -> BH1(C/H) -> B1H(C/H) -> B1C
+#         x = self.proj(x)
+#         x = self.proj_drop(x)
+
+#         return x # N x 1 x 768
     
 
 class CrossPHGBlock(nn.Module):
@@ -158,13 +158,10 @@ class CrossPHGBlock(nn.Module):
         if (self.curr_layer+1) % self.fuse_freq == 0:
             topo_feats = self.topo_proj(topo_feats) # N, 768
             topo_feats = topo_feats.unsqueeze(1) # N,1,768
-            img_tokens = img_feats[:,1:,:] # N, num_patches, 768
-            img_cls = img_feats[:,0:1,:]
+            #img_tokens = img_feats[:,1:,:] # N, num_patches, 768
         
-            tmp = torch.concat((topo_feats,img_tokens),dim=1) # N， num_patches + 1, 768
-            fusion_cls = self.cross_attn(tmp) # N x 1 x 768
-            fusion_cls = img_cls + self.ffn(self.norm2(fusion_cls)) # N x 1 x 768
-            img_feats = torch.concat((fusion_cls,img_tokens),dim=1)
+            fusion_feats = self.cross_attn(q=img_feats,kv=topo_feats) # N x num_patches+1 x 768
+            img_feats = img_feats + self.ffn(self.norm2(fusion_feats)) # N x 1 x 768
 
         else:
             img_feats = img_feats + self.ffn(self.norm2(img_feats))
